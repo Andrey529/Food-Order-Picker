@@ -15,7 +15,6 @@ class DessertSerialization {
     }
 
     val json = Json {
-        prettyPrint = true
         serializersModule = module
     }
 }

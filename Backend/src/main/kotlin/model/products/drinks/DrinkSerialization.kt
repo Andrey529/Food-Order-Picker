@@ -16,7 +16,6 @@ class DrinkSerialization {
     }
 
     val json = Json {
-        prettyPrint = true
         serializersModule = module
     }
 }

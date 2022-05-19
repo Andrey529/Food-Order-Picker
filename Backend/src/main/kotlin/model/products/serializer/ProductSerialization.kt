@@ -34,7 +34,6 @@ class ProductSerialization {
     }
 
     val json = Json {
-        prettyPrint = true
         serializersModule = module
     }
 }

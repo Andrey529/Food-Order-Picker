@@ -1,0 +1,18 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="ProductSerializationTest" type="JUnit" factoryName="JUnit" nameIsGenerated="true">
+    <module name="Backend" />
+    <extension name="coverage">
+      <pattern>
+        <option name="PATTERN" value="model.products.serializer.*" />
+        <option name="ENABLED" value="true" />
+      </pattern>
+    </extension>
+    <option name="PACKAGE_NAME" value="model.products.serializer" />
+    <option name="MAIN_CLASS_NAME" value="model.products.serializer.ProductSerializationTest" />
+    <option name="METHOD_NAME" value="" />
+    <option name="TEST_OBJECT" value="class" />
+    <method v="2">
+      <option name="Make" enabled="true" />
+    </method>
+  </configuration>
+</component>
