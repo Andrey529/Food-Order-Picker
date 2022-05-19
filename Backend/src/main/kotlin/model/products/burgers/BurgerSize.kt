@@ -1,5 +1,6 @@
 package model.products.burgers
 
+@kotlinx.serialization.Serializable
 enum class BurgerSize(private val textValue: String) {
     SINGLE("Single"),
     DOUBLE("Double");
