@@ -15,7 +15,7 @@ class AddBurger {
     fun run(
         @HttpTrigger(name = "req",
             methods = [HttpMethod.POST],
-            authLevel = AuthorizationLevel.FUNCTION,
+            authLevel = AuthorizationLevel.ANONYMOUS,
             route = "burger"
         ) request: HttpRequestMessage<Optional<String?>>,
         context: ExecutionContext,
