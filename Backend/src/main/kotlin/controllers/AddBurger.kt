@@ -23,7 +23,7 @@ class AddBurger {
         context.logger.info("AddBurger HTTP trigger function invoked with post method.")
 
         val requestBody = request.body
-        return if (requestBody == null) {
+        return if (requestBody == null || requestBody.get().isEmpty()) {
             context.logger.info("Request body is empty.")
             request.createResponseBuilder(HttpStatus.BAD_REQUEST)
                 .body("Not a valid request").build()
@@ -32,7 +32,7 @@ class AddBurger {
 //            TODO("Deserialize json with burger and add it to CosmosDB")
 
             context.logger.info("Created new burger.")
-            request.createResponseBuilder(HttpStatus.OK).build()
+            request.createResponseBuilder(HttpStatus.OK).body("Okay").build()
         }
     }
 }
