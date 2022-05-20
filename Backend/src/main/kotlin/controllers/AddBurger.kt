@@ -25,14 +25,14 @@ class AddBurger {
 
         val requestBody = request.body
 
-        var isEmpty = false
-        try {
-            requestBody.get()
-        } catch (e: Exception) {
-            isEmpty = true
-        }
+//        var isEmpty = false
+//        try {
+//            requestBody.get()
+//        } catch (e: Exception) {
+//            isEmpty = true
+//        }
 
-        return if ((requestBody == null) || isEmpty) {
+        return if ((requestBody == null) || !requestBody.isPresent()) {
             context.logger.info("Request body is empty.")
             request.createResponseBuilder(HttpStatus.BAD_REQUEST)
                 .body("Not a valid request").build()
