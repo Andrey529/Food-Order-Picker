@@ -8,7 +8,6 @@ import com.microsoft.azure.functions.ExecutionContext
 import com.microsoft.azure.functions.HttpResponseMessage
 import com.microsoft.azure.functions.HttpStatus
 import com.microsoft.azure.functions.annotation.FunctionName
-import java.util.Optional
 import java.util.*
 
 class AddBurger {
@@ -25,20 +24,14 @@ class AddBurger {
 
         val requestBody = request.body
 
-//        var isEmpty = false
-//        try {
-//            requestBody.get()
-//        } catch (e: Exception) {
-//            isEmpty = true
-//        }
-
-        return if ((requestBody == null) || !requestBody.isPresent()) {
+        return if ((requestBody == null) || !requestBody.isPresent) {
             context.logger.info("Request body is empty.")
             request.createResponseBuilder(HttpStatus.BAD_REQUEST)
                 .body("Not a valid request").build()
         } else {
 
 //            TODO("Deserialize json with burger and add it to CosmosDB")
+
 
             context.logger.info("Created new burger.")
             request.createResponseBuilder(HttpStatus.OK).body("Okay").build()
