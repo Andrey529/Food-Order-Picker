@@ -23,8 +23,9 @@ class AddBurger {
         context.logger.info("AddBurger HTTP trigger function invoked with post method.")
 
         val requestBody = request.body
+        val isEmpty: Boolean = request.body.isEmpty()
 
-        return if (requestBody == null || requestBody.isEmpty()) {
+        return if (requestBody == null || isEmpty) {
             context.logger.info("Request body is empty.")
             request.createResponseBuilder(HttpStatus.BAD_REQUEST)
                 .body("Not a valid request").build()
