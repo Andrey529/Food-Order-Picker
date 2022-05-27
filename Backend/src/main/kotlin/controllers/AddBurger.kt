@@ -8,9 +8,9 @@ import com.microsoft.azure.functions.*
 import com.microsoft.azure.functions.annotation.AuthorizationLevel
 import com.microsoft.azure.functions.annotation.FunctionName
 import com.microsoft.azure.functions.annotation.HttpTrigger
+import kotlinx.serialization.decodeFromString
 import products.burgers.Burger
-import products.burgers.BurgerSize
-import products.burgers.CheeseBurger
+import products.burgers.BurgerSerialization
 import java.util.*
 import java.util.logging.Logger
 
@@ -47,18 +47,22 @@ class AddBurger {
                 .body("Not a valid request").build()
         } else {
 
-//            TODO("Deserialize json with burger and add it to CosmosDB")
+            val burger = BurgerSerialization().json.decodeFromString<Burger>(requestBody.toString())
+            context.logger.info("Deserialized burger from request body.")
 
             createDatabaseIfNotExists(context.logger)
             createContainerIfNotExists(context.logger)
 
             val cosmosItemRequestOptions = CosmosItemRequestOptions()
+            context.logger.info("Created cosmos item request options.")
+
             val item: CosmosItemResponse<Burger> =
-                container!!.createItem(CheeseBurger(50, BurgerSize.SINGLE), PartitionKey(1225), cosmosItemRequestOptions)
+                container!!.createItem(burger, PartitionKey(1225), cosmosItemRequestOptions)
 
             context.logger.info("Created item with request charge of ${item.requestCharge} within duration ${item.duration}");
 
             cosmosClient.close()
+            context.logger.info("Close connection with CosmosDB.")
 
             context.logger.info("Created new burger.")
             request.createResponseBuilder(HttpStatus.OK).body("Okay").build()
