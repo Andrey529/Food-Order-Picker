@@ -29,7 +29,7 @@ class AddBurger {
     private var container: CosmosContainer? = null
 
     @FunctionName("AddBurger")
-    fun run(
+    fun addBurger(
         @HttpTrigger(name = "req",
             methods = [HttpMethod.POST],
             authLevel = AuthorizationLevel.ANONYMOUS,
@@ -70,15 +70,56 @@ class AddBurger {
         }
     }
 
+    @FunctionName("GetBurger")
+    fun getBurger(
+        @HttpTrigger(name = "req",
+            methods = [HttpMethod.GET],
+            authLevel = AuthorizationLevel.ANONYMOUS,
+            route = "burger"
+        ) request: HttpRequestMessage<Optional<String?>>,
+        context: ExecutionContext,
+    ): HttpResponseMessage {
+        context.logger.info("GetBurger HTTP trigger function invoked with get method.")
+
+
+        val id = request.queryParameters["id"]
+
+
+        id?.let {
+            try {
+                val item: CosmosItemResponse<Burger> =
+                    container!!.readItem(id, PartitionKey(""), Burger::class.java)
+                val requestCharge = item.requestCharge
+                val requestLatency: java.time.Duration? = item.getDuration()
+                context.logger.info("Item successfully read with id ${item.item} with a charge of $requestCharge and within duration $requestLatency")
+
+                return request
+                    .createResponseBuilder(HttpStatus.OK)
+                    .body(item.item)
+                    .build()
+
+            } catch (e: Exception) {
+                context.logger.info("Read burger failed with $e.")
+
+                return request
+                    .createResponseBuilder(HttpStatus.BAD_REQUEST)
+                    .body("Read burger failed.")
+                    .build()
+            }
+        }
+
+        return request
+            .createResponseBuilder(HttpStatus.BAD_REQUEST)
+            .body("Please pass a id on the query string")
+            .build()
+    }
+
     @Throws(Exception::class)
     private fun createDatabaseIfNotExists(logger: Logger) {
         logger.info("Create database $databaseName if not exists.")
 
-        //  Create database if not exists
-        //  <CreateDatabaseIfNotExists>
         val cosmosDatabaseResponse: CosmosDatabaseResponse = cosmosClient.createDatabaseIfNotExists(databaseName)
         database = cosmosClient.getDatabase(cosmosDatabaseResponse.properties.id)
-        //  </CreateDatabaseIfNotExists>
 
         logger.info("Checking database ${database!!.id} completed!\n")
     }
@@ -87,15 +128,12 @@ class AddBurger {
     private fun createContainerIfNotExists(logger: Logger) {
         logger.info("Create container $containerName if not exists.")
 
-        //  Create container if not exists
-        //  <CreateContainerIfNotExists>
         val containerProperties = CosmosContainerProperties(containerName, "/lastName")
 
-        //  Create container with 400 RU/s
         val cosmosContainerResponse: CosmosContainerResponse =
             database!!.createContainerIfNotExists(containerProperties, ThroughputProperties.createManualThroughput(400))
         container = database!!.getContainer(cosmosContainerResponse.properties.id)
-        //  </CreateContainerIfNotExists>
+
         logger.info("Checking container ${container!!.id} completed!\n")
     }
 
