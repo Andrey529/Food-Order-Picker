@@ -54,7 +54,7 @@ class AddBurger {
 
             val cosmosItemRequestOptions = CosmosItemRequestOptions()
             val item: CosmosItemResponse<Burger> =
-                container!!.createItem(CheeseBurger(50, BurgerSize.SINGLE), cosmosItemRequestOptions)
+                container!!.createItem(CheeseBurger(50, BurgerSize.SINGLE), PartitionKey(1225), cosmosItemRequestOptions)
 
             context.logger.info("Created item with request charge of ${item.requestCharge} within duration ${item.duration}");
 
