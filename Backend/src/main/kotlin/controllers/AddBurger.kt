@@ -47,7 +47,7 @@ class AddBurger {
                 .body("Not a valid request").build()
         } else {
 
-            context.logger.info("Request body: $requestBody")
+            context.logger.info("Request body: ${requestBody.get()}")
             val burger = BurgerSerialization().json.decodeFromString<Burger>(requestBody.get())
             context.logger.info("Deserialized burger from request body.")
 
