@@ -30,11 +30,11 @@ val VideoList = FC<VideoListProps> { props ->
             onClick = {
                 props.onSelectVideo(video)
             }
-            if (video == props.selectedVideo) {
+            if (video.uniqueUrl == props.selectedVideo?.uniqueUrl) {
                 +"▶ "
             }
 
-            +"${video.speaker}: ${video.title}"
+            +video.title
         }
     }
 

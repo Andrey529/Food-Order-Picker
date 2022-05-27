@@ -8,6 +8,8 @@ version = "1.0-SNAPSHOT"
 
 repositories {
     mavenCentral()
+
+   // maven("https://maven.pkg.github.com/cy6ergn0m/kotlinx-uuidd")
 }
 
 kotlin {
@@ -40,6 +42,7 @@ dependencies {
     //Coroutines & serialization (chapter 8)
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.0")
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.3.2")
+
 }
 
 // Heroku Deployment (chapter 9)

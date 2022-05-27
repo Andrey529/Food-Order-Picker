@@ -19,8 +19,8 @@ val VideoPlayer = FC<VideoPlayerProps> { props ->
     div {
         css {
             position = Position.absolute
-            top = 10.px
-            right = 10.px
+            top = 100.px
+            right = 30.pct
         }
         h3 {
             +"${props.video.speaker}: ${props.video.title}"
@@ -40,8 +40,14 @@ val VideoPlayer = FC<VideoPlayerProps> { props ->
             }
         }
 
-        ReactPlayer {
-            url = props.video.videoUrl
+        div{
+            css {
+                display = Display.flex
+                marginBottom = 10.px
+            }
+            img{
+                src = props.video.image
+            }
         }
         div {
             css {
