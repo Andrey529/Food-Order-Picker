@@ -48,7 +48,7 @@ class AddBurger {
         } else {
 
             context.logger.info("Request body: $requestBody")
-            val burger = BurgerSerialization().json.decodeFromString<Burger>(requestBody.toString())
+            val burger = BurgerSerialization().json.decodeFromString<Burger>(requestBody.get())
             context.logger.info("Deserialized burger from request body.")
 
             createDatabaseIfNotExists(context.logger)
