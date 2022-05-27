@@ -1,20 +1,26 @@
+import com.benasher44.uuid.Uuid
 import csstype.*
 import kotlinVideo.KotlinVideo
-import kotlinx.browser.window
-import react.*
-import kotlinx.coroutines.*
+import kotlinx.coroutines.MainScope
+import kotlinx.coroutines.launch
+import products.ProductWithLink
+import products.burgers.BigMack
+import products.burgers.BurgerSize
+import react.FC
+import react.Props
 import react.css.css
 import react.dom.html.ReactHTML.a
+import react.dom.html.ReactHTML.button
+import react.dom.html.ReactHTML.div
 import react.dom.html.ReactHTML.h1
 import react.dom.html.ReactHTML.h3
-import react.dom.html.ReactHTML.div
-import react.dom.html.ReactHTML.button
 import react.dom.html.ReactHTML.hr
 import react.dom.html.ReactHTML.img
 import react.dom.html.ReactHTML.li
 import react.dom.html.ReactHTML.ul
-
-
+import react.useEffectOnce
+import react.useState
+import kotlin.random.Random
 
 
 /*suspend fun fetchVideo(id: Int): KotlinVideo {
@@ -35,16 +41,57 @@ suspend fun fetchVideos(): List<KotlinVideo> = coroutineScope {
     }.awaitAll()
 }*/
 
+val listProducts = listOf(
+    ProductWithLink(BigMack(390, BurgerSize.DOUBLE), "Images/burger.png", 1)
+)
+
 val fetchVideos = listOf(
-    KotlinVideo(1, "Burger", "mac", "https://youtu.be/PsaFVLr8t4E", "Images/burger.png", 1),
-    KotlinVideo(2, "CheeseBurger", "mac", "https://youtu.be/Fzt_9I733Yg", "Images/cheeseburger.png", 2),
-    KotlinVideo(3, "French-Fries", "mac", "https://youtu.be/pSiZVAeReeg", "Images/french-fries.png", 3),
-    KotlinVideo(4, "Coca-Cola", "mac", "https://youtu.be/pSiZVAeReeg", "Images/coke.png", 4),
-    KotlinVideo(5, "Coca-Cola Cherry", "mac", "https://youtu.be/pSiZVAeReeg", "Images/coca-cola-cherry.png", 5)
+    KotlinVideo(
+        1,
+        "Burger",
+        "burger",
+        "https://youtu.be/PsaFVLr8t4E",
+        "Images/burger.png",
+        Uuid(Random.nextLong(), Random.nextLong())
+    ),
+    KotlinVideo(
+        2,
+        "CheeseBurger",
+        "burger",
+        "https://youtu.be/Fzt_9I733Yg",
+        "Images/cheeseburger.png",
+        Uuid(Random.nextLong(), Random.nextLong())
+    ),
+    KotlinVideo(
+        3,
+        "French-Fries",
+        "snack",
+        "https://youtu.be/pSiZVAeReeg",
+        "Images/french-fries.png",
+        Uuid(Random.nextLong(), Random.nextLong())
+    ),
+    KotlinVideo(
+        4,
+        "Coca-Cola",
+        "drink",
+        "https://youtu.be/pSiZVAeReeg",
+        "Images/coke.png",
+        Uuid(Random.nextLong(), Random.nextLong())
+    ),
+    KotlinVideo(
+        5,
+        "Coca-Cola Cherry",
+        "drink",
+        "https://youtu.be/pSiZVAeReeg",
+        "Images/coca-cola-cherry.png",
+        Uuid(Random.nextLong(), Random.nextLong())
+    )
 
 )
 
 var Order = mutableListOf<KotlinVideo>()
+
+var filterButtons = 5
 
 val mainScope = MainScope()
 
@@ -55,11 +102,11 @@ val App = FC<Props> {
     var unwatchedVideos: List<KotlinVideo> by useState(emptyList())
     var watchedVideos: List<KotlinVideo> by useState(emptyList())
 
-    /*useEffectOnce {
+    useEffectOnce {
         mainScope.launch {
             unwatchedVideos = fetchVideos
         }
-    }*/
+    }
     div {
         css {
             backgroundColor = NamedColor.blue
@@ -178,7 +225,7 @@ val App = FC<Props> {
                 backgroundColor = NamedColor.aquamarine
                 float = Float.left
                 width = 20.pct
-                height = 600.px
+                height = 800.px
             }
             h3 {
                 css {
@@ -187,27 +234,30 @@ val App = FC<Props> {
                 +"Меню"
             }
             a {
-                    button {
-                        css{
-                            padding = 0.px
-                            border = 0.px
-                            marginLeft = 40.px
+                button {
+                    css {
+                        padding = 0.px
+                        border = 0.px
+                        marginLeft = 40.px
+                        width = 100.px
+                        height = 100.px
+                    }
+                    img {
+                        css {
                             width = 100.px
                             height = 100.px
+                            border = 0.px
+                            border = Border(4.px, LineStyle.solid, NamedColor.darkred)
+                            backgroundColor = NamedColor.gray
+                            //marginLeft = 40.px
                         }
-                        img {
-                            css {
-                                width = 100.px
-                                height = 100.px
-                                border = 0.px
-                                border = Border(4.px, LineStyle.solid, NamedColor.darkred)
-                                backgroundColor = NamedColor.gray
-                                //marginLeft = 40.px
-                            }
-                            src = "Images/burger.png"
-                            title = "Перейти в раздел Бургеров"
-                        }
+                        src = "Images/burger.png"
+                        title = "Перейти в раздел Бургеров"
                     }
+                    onClick = {
+                        filterButtons = 1
+                    }
+                }
             }
             a {
                 css {
@@ -230,6 +280,9 @@ val App = FC<Props> {
                         }
                         src = "Images/coke.png"
                         title = "Перейти в раздел Напитков"
+                    }
+                    onClick = {
+                        filterButtons = 2
                     }
                 }
             }
@@ -256,6 +309,9 @@ val App = FC<Props> {
                         src = "Images/french-fries.png"
                         title = "Перейти в раздел Закусок"
                     }
+                    onClick = {
+                        filterButtons = 3
+                    }
                 }
             }
             a {
@@ -281,126 +337,139 @@ val App = FC<Props> {
                         src = "Images/ice-cream.png"
                         title = "Перейти в раздел Десертов"
                     }
+                    onClick = {
+                        filterButtons = 4
+                    }
                 }
             }
-        }
-        /* div {
-         h3 {
-             +"Ассортимент"
-         }
-         VideoList {
-             videos = unwatchedVideos
-             selectedVideo = currentUnWatchVideo
-             onSelectVideo = { video ->
-                 currentUnWatchVideo = video
-             }
-         }
+            a {
+                css {
 
-         h3 {
-             +"Ваш заказ"
-         }
-         VideoList {
-             videos = watchedVideos
-             selectedVideo = currentWatchVideo
-             onSelectVideo = { video ->
-                 currentWatchVideo = video
-             }
-         }
-     }*/
-        /*div {
-        currentUnWatchVideo?.let { curr ->
-            VideoPlayer {
-                var copy: KotlinVideo
-                video = curr
-                unwatchedVideo = curr in unwatchedVideos
-                onWatchedButtonPressed = {
-                    if (video in unwatchedVideos) {
-                        //unwatchedVideos = unwatchedVideos - video
-                        copy = KotlinVideo(video.id, video.title, video.speaker, video.videoUrl, video.image, Random.nextInt())
-                        //copy.uniqueUrl = Random.nextInt()
-                        watchedVideos = watchedVideos + copy
-                        //сделать копию объекта видео, добавить в него уникальное свойство, добавить копию в вотчед..
-                    } else {
-                        watchedVideos = watchedVideos - video
-                        unwatchedVideos = unwatchedVideos + video
+                }
+                button {
+                    css {
+                        width = 218.px
+                        height = 100.px
+                        marginLeft = 40.px
+                        textAlign = TextAlign.center
+                        border = Border(4.px, LineStyle.solid, NamedColor.darkred)
+                        backgroundColor = NamedColor.gray
+                    }
+                    +"Весь ассортимент"
+                    onClick = {
+                        filterButtons = 5
                     }
                 }
             }
         }
-    }
-    div{
-        css{
-            position = Position.absolute
-            top = 50.px
-            right = 25.pct
-        }
 
-        button{
-            css{
-                //textAlign = TextAlign.center
-                width = 100.px
-                height = 50.px
-                backgroundColor = NamedColor.lightgoldenrodyellow
-            }
-            onClick = {
-
-            }
-
-            +"Добавить бургер в заказ"
-        }
-        button{
-            css{
-                //textAlign = TextAlign.center
-                width = 100.px
-                height = 50.px
-                backgroundColor = NamedColor.lightgoldenrodyellow
-            }
-            +"Убрать позицию из заказа"
-            onClick = {
-                currentWatchVideo?.let{ curr ->
-                    var video = curr in watchedVideos
-                    if(video){
-                        watchedVideos -= curr
-                    }
-                }
-            }
-        }
-        button{
-            css{
-               // textAlign = TextAlign.center
-                width = 100.px
-                height = 50.px
-                backgroundColor = NamedColor.green
-            }
-            onClick = {
-                watchedVideos = emptyList()
-            }
-            +"Сделать заказ и подождать"
-        }
-    }*/
         div {
             id = "container"
             css {
                 backgroundColor = NamedColor.lightgrey
                 float = Float.right
                 width = 25.pct
-                height = 600.px
+                height = 800.px
             }
-            h3 {
-                +"Основа"
 
+            div {
+                h3 {
+                    css {
+                        textAlign = TextAlign.center
+                    }
+                    +"Ваш заказ"
+                }
+                button {
+                    css {
+                        //textAlign = TextAlign.center
+                        width = 100.px
+                        height = 50.px
+                        marginLeft = 70.px
+                        backgroundColor = NamedColor.lightgoldenrodyellow
+                    }
+                    +"Убрать позицию из заказа"
+                    onClick = {
+                        currentWatchVideo?.let { curr ->
+                            val video = curr in watchedVideos
+                            if (video) {
+                                watchedVideos = watchedVideos - curr
+                            }
+                        }
+                    }
+                }
+                button {
+                    css {
+                        // textAlign = TextAlign.center
+                        width = 100.px
+                        height = 50.px
+                        backgroundColor = NamedColor.green
+                    }
+                    onClick = {
+                        watchedVideos = emptyList()
+                    }
+                    +"Сделать заказ и подождать"
+                }
+                VideoList {
+                    videos = watchedVideos
+                    selectedVideo = currentWatchVideo
+                    onSelectVideo = { video ->
+                        currentWatchVideo = video
+                    }
+                }
             }
+
         }
         div {
-            id = "qwer"
+            id = "list"
             css {
                 backgroundColor = NamedColor.blueviolet
                 float = Float.left
                 width = 55.pct
-                height = 600.px
+                height = 800.px
             }
-            h3 {
-                +"Основа"
+            div {
+                h3 {
+                    +"Ассортимент"
+                    if(filterButtons == 3){
+                        +"Ассортимент"
+                    }
+                }
+                    VideoList {
+                        videos = unwatchedVideos
+                        selectedVideo = currentUnWatchVideo
+                        onSelectVideo = { video ->
+                            currentUnWatchVideo = video
+                        }
+                    }
+
+                currentUnWatchVideo?.let { curr ->
+                    VideoPlayer {
+                        var copy: KotlinVideo
+                        video = curr
+                        unwatchedVideo = curr in unwatchedVideos
+                        onWatchedButtonPressed = {
+                            if (video in unwatchedVideos) {
+                                //unwatchedVideos = unwatchedVideos - video
+                                copy = KotlinVideo(
+                                    video.id,
+                                    video.title,
+                                    video.speaker,
+                                    video.videoUrl,
+                                    video.image,
+                                    Uuid(Random.nextLong(), Random.nextLong())
+                                )
+                                //copy.uniqueUrl = Random.nextInt()
+                                watchedVideos = watchedVideos + copy
+                                //сделать копию объекта видео, добавить в него уникальное свойство, добавить копию в вотчед..
+                            } else {
+                                watchedVideos = watchedVideos - video
+                                unwatchedVideos = unwatchedVideos + video
+                            }
+                        }
+                    }
+                }
+
+
             }
         }
         div {
@@ -413,7 +482,9 @@ val App = FC<Props> {
             id = "footer"
             css {
                 backgroundColor = NamedColor.black
-                height = 300.px
+                height = 150.px
+                color = NamedColor.white
+                textAlign = TextAlign.center
             }
             h3 {
                 +"Подвал"

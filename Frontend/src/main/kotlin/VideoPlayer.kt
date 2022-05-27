@@ -1,9 +1,9 @@
+
 import csstype.*
 import kotlinVideo.KotlinVideo
-import kotlinVideo.Video
-import react.*
+import react.FC
+import react.Props
 import react.css.css
-import react.dom.render
 import react.dom.html.ReactHTML.button
 import react.dom.html.ReactHTML.div
 import react.dom.html.ReactHTML.h3
@@ -19,11 +19,11 @@ val VideoPlayer = FC<VideoPlayerProps> { props ->
     div {
         css {
             position = Position.absolute
-            top = 100.px
+            top = 250.px
             right = 30.pct
         }
         h3 {
-            +"${props.video.speaker}: ${props.video.title}"
+            +props.video.title
         }
         button {
             css {

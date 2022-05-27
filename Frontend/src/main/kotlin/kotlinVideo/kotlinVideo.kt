@@ -1,5 +1,7 @@
 package kotlinVideo
 
+import com.benasher44.uuid.Uuid
+
 @kotlinx.serialization.Serializable
 open class Video(
     open val id: Int,
@@ -17,12 +19,7 @@ data class KotlinVideo(
     override val speaker: String,
     override val videoUrl: String,
     override val image: String,
-    var uniqueUrl: Int
+    var uniqueUrl: Uuid
 ) : Video(id, title, speaker, videoUrl, image)
 
-data class Burger(
-    var size: String,
-    var name: String,
-    var uniqueUrl: Int
-)
 

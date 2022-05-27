@@ -42,7 +42,7 @@ dependencies {
     //Coroutines & serialization (chapter 8)
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.0")
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.3.2")
-
+    implementation("com.benasher44:uuid:0.4.0")
 }
 
 // Heroku Deployment (chapter 9)
