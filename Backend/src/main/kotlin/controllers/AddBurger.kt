@@ -85,6 +85,10 @@ class AddBurger {
 
         if (id != null) {
             try {
+
+                createDatabaseIfNotExists(context.logger)
+                createContainerIfNotExists(context.logger)
+
                 if (container != null) {
                     val item: CosmosItemResponse<Burger> = container!!.readItem(id, null, Burger::class.java)
                     val requestCharge = item.requestCharge
