@@ -135,7 +135,7 @@ class AddBurger {
     private fun createContainerIfNotExists(logger: Logger) {
         logger.info("Create container $containerName if not exists.")
 
-        val containerProperties = CosmosContainerProperties(containerName, "/lastName")
+        val containerProperties = CosmosContainerProperties(containerName, "/Burger")
 
         val cosmosContainerResponse: CosmosContainerResponse =
             database!!.createContainerIfNotExists(containerProperties, ThroughputProperties.createManualThroughput(400))
