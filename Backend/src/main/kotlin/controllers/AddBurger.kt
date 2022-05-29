@@ -11,6 +11,7 @@ import com.microsoft.azure.functions.annotation.HttpTrigger
 import kotlinx.serialization.decodeFromString
 import products.burgers.Burger
 import products.burgers.BurgerSerialization
+import products.burgers.CheeseBurger
 import java.util.*
 import java.util.logging.Logger
 
@@ -22,8 +23,8 @@ class AddBurger {
         .key("SkcGhJ0IzZQOv6iYCwkjAMuYvWXZN8YmOiavkO2dgrhp51hjScLfJXw2LBhhLFk6sd49DlNiWYuEJUxiGhbN2g==")
         .buildClient()
 
-    private val databaseName = "ToDoList"
-    private val containerName = "Items"
+    private val databaseName = "Products"
+    private val containerName = "Orders"
 
     private var database: CosmosDatabase? = null
     private var container: CosmosContainer? = null
@@ -58,7 +59,7 @@ class AddBurger {
             context.logger.info("Created cosmos item request options.")
 
             val item: CosmosItemResponse<Burger> =
-                container!!.createItem(burger, PartitionKey("partitionKey"), cosmosItemRequestOptions)
+                container!!.createItem(burger, PartitionKey(CheeseBurger::id), cosmosItemRequestOptions)
 
             context.logger.info("Created item with request charge of ${item.requestCharge} within duration ${item.duration}");
 
@@ -90,7 +91,7 @@ class AddBurger {
                 createContainerIfNotExists(context.logger)
 
                 if (container != null) {
-                    val item: CosmosItemResponse<Burger> = container!!.readItem(id, PartitionKey("partitionKey"), Burger::class.java)
+                    val item: CosmosItemResponse<Burger> = container!!.readItem(id, PartitionKey(CheeseBurger::id), Burger::class.java)
                     val requestCharge = item.requestCharge
                     val requestLatency: java.time.Duration? = item.duration
                     context.logger.info("Item successfully read with id ${item.item} with a charge of $requestCharge and within duration $requestLatency")
@@ -135,7 +136,7 @@ class AddBurger {
     private fun createContainerIfNotExists(logger: Logger) {
         logger.info("Create container $containerName if not exists.")
 
-        val containerProperties = CosmosContainerProperties(containerName, "/partitionKey")
+        val containerProperties = CosmosContainerProperties(containerName, "/id")
 
         val cosmosContainerResponse: CosmosContainerResponse =
             database!!.createContainerIfNotExists(containerProperties, ThroughputProperties.createManualThroughput(400))
