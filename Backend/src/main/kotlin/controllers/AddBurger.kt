@@ -11,7 +11,6 @@ import com.microsoft.azure.functions.annotation.HttpTrigger
 import kotlinx.serialization.decodeFromString
 import products.burgers.Burger
 import products.burgers.BurgerSerialization
-import products.burgers.CheeseBurger
 import java.util.*
 import java.util.logging.Logger
 
@@ -49,7 +48,7 @@ class AddBurger {
         } else {
 
             context.logger.info("Request body: ${requestBody.get()}")
-            val burger = BurgerSerialization().json.decodeFromString<CheeseBurger>(requestBody.get())
+            val burger = BurgerSerialization().json.decodeFromString<Burger>(requestBody.get())
             context.logger.info("Deserialized burger from request body.")
 
             createDatabaseIfNotExists(context.logger)
