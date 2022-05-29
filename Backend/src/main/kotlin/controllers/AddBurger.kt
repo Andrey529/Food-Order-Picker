@@ -58,7 +58,7 @@ class AddBurger {
             context.logger.info("Created cosmos item request options.")
 
             val item: CosmosItemResponse<Burger> =
-                container!!.createItem(burger, PartitionKey(burger.id), cosmosItemRequestOptions)
+                container!!.createItem(burger, PartitionKey(burger.id.toString()), cosmosItemRequestOptions)
 
             context.logger.info("Created item with request charge of ${item.requestCharge} within duration ${item.duration}");
 
@@ -90,7 +90,7 @@ class AddBurger {
                 createContainerIfNotExists(context.logger)
 
                 if (container != null) {
-                    val item: CosmosItemResponse<Burger> = container!!.readItem(id, PartitionKey(id), Burger::class.java)
+                    val item: CosmosItemResponse<Burger> = container!!.readItem(id, PartitionKey(id.toString()), Burger::class.java)
                     val requestCharge = item.requestCharge
                     val requestLatency: java.time.Duration? = item.duration
                     context.logger.info("Item successfully read with id ${item.item} with a charge of $requestCharge and within duration $requestLatency")
