@@ -58,7 +58,7 @@ class AddBurger {
             context.logger.info("Created cosmos item request options.")
 
             val item: CosmosItemResponse<Burger> =
-                container!!.createItem(burger, PartitionKey("/Burger"), cosmosItemRequestOptions)
+                container!!.createItem(burger, PartitionKey("partitionKey"), cosmosItemRequestOptions)
 
             context.logger.info("Created item with request charge of ${item.requestCharge} within duration ${item.duration}");
 
@@ -90,7 +90,7 @@ class AddBurger {
                 createContainerIfNotExists(context.logger)
 
                 if (container != null) {
-                    val item: CosmosItemResponse<Burger> = container!!.readItem(id, PartitionKey("/Burger"), Burger::class.java)
+                    val item: CosmosItemResponse<Burger> = container!!.readItem(id, PartitionKey("partitionKey"), Burger::class.java)
                     val requestCharge = item.requestCharge
                     val requestLatency: java.time.Duration? = item.duration
                     context.logger.info("Item successfully read with id ${item.item} with a charge of $requestCharge and within duration $requestLatency")
@@ -135,7 +135,7 @@ class AddBurger {
     private fun createContainerIfNotExists(logger: Logger) {
         logger.info("Create container $containerName if not exists.")
 
-        val containerProperties = CosmosContainerProperties(containerName, "/Burger")
+        val containerProperties = CosmosContainerProperties(containerName, "/partitionKey")
 
         val cosmosContainerResponse: CosmosContainerResponse =
             database!!.createContainerIfNotExists(containerProperties, ThroughputProperties.createManualThroughput(400))
