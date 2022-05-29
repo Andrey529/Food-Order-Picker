@@ -81,33 +81,36 @@ class AddBurger {
     ): HttpResponseMessage {
         context.logger.info("GetBurger HTTP trigger function invoked with get method.")
 
-
         val id = request.queryParameters["id"]
 
-
-        id?.let {
+        if (id != null) {
             try {
-                val item: CosmosItemResponse<Burger> =
-                    container!!.readItem(id, PartitionKey(""), Burger::class.java)
-                val requestCharge = item.requestCharge
-                val requestLatency: java.time.Duration? = item.getDuration()
-                context.logger.info("Item successfully read with id ${item.item} with a charge of $requestCharge and within duration $requestLatency")
+                if (container != null) {
+                    val item: CosmosItemResponse<Burger> = container!!.readItem(id, null, Burger::class.java)
+                    val requestCharge = item.requestCharge
+                    val requestLatency: java.time.Duration? = item.duration
+                    context.logger.info("Item successfully read with id ${item.item} with a charge of $requestCharge and within duration $requestLatency")
 
-                return request
-                    .createResponseBuilder(HttpStatus.OK)
-                    .body(item.item)
-                    .build()
-
+                    return request
+                        .createResponseBuilder(HttpStatus.OK)
+                        .body(item.item)
+                        .build()
+                } else {
+                    context.logger.info("Read burger failed, because container with burger does not exist.")
+                    return request
+                        .createResponseBuilder(HttpStatus.BAD_REQUEST)
+                        .body("Container with burger data does not exist.")
+                        .build()
+                }
             } catch (e: Exception) {
                 context.logger.info("Read burger failed with $e.")
-
                 return request
                     .createResponseBuilder(HttpStatus.BAD_REQUEST)
                     .body("Read burger failed.")
                     .build()
             }
         }
-
+        context.logger.info("Read burger failed, there is no id value in query parameters.")
         return request
             .createResponseBuilder(HttpStatus.BAD_REQUEST)
             .body("Please pass a id on the query string")
