@@ -84,35 +84,36 @@ class AddBurger {
         val id = request.queryParameters["id"]
 
         if (id != null) {
-            try {
+            createDatabaseIfNotExists(context.logger)
+            createContainerIfNotExists(context.logger)
 
-                createDatabaseIfNotExists(context.logger)
-                createContainerIfNotExists(context.logger)
+            if (container != null) {
+                val item: CosmosItemResponse<Burger> = container!!.readItem(id, PartitionKey(id), Burger::class.java)
+                val requestCharge = item.requestCharge
+                val requestLatency: java.time.Duration? = item.duration
+                context.logger.info("Item successfully read with id ${item.item} with a charge of $requestCharge and within duration $requestLatency")
 
-                if (container != null) {
-                    val item: CosmosItemResponse<Burger> = container!!.readItem(id.toString(), PartitionKey(id.toString()), Burger::class.java)
-                    val requestCharge = item.requestCharge
-                    val requestLatency: java.time.Duration? = item.duration
-                    context.logger.info("Item successfully read with id ${item.item} with a charge of $requestCharge and within duration $requestLatency")
-
-                    return request
-                        .createResponseBuilder(HttpStatus.OK)
-                        .body(item.item)
-                        .build()
-                } else {
-                    context.logger.info("Read burger failed, because container with burger does not exist.")
-                    return request
-                        .createResponseBuilder(HttpStatus.BAD_REQUEST)
-                        .body("Container with burger data does not exist.")
-                        .build()
-                }
-            } catch (e: Exception) {
-                context.logger.info("Read burger failed with $e.")
+                return request
+                    .createResponseBuilder(HttpStatus.OK)
+                    .body(item.item)
+                    .build()
+            } else {
+                context.logger.info("Read burger failed, because container with burger does not exist.")
                 return request
                     .createResponseBuilder(HttpStatus.BAD_REQUEST)
-                    .body("Read burger failed.")
+                    .body("Container with burger data does not exist.")
                     .build()
             }
+
+//            try {
+//
+//            } catch (e: Exception) {
+//                context.logger.info("Read burger failed with $e.")
+//                return request
+//                    .createResponseBuilder(HttpStatus.BAD_REQUEST)
+//                    .body("Read burger failed.")
+//                    .build()
+//            }
         }
         context.logger.info("Read burger failed, there is no id value in query parameters.")
         return request
