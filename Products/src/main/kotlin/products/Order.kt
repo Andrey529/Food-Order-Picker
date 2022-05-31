@@ -1,4 +1,4 @@
-package model
+package products
 
 import kotlinx.serialization.Serializable
 import products.burgers.Burger

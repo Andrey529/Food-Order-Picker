@@ -4,5 +4,4 @@ import products.Product
 
 interface Burger : Product {
     val size: BurgerSize
-    val id: String
 }
