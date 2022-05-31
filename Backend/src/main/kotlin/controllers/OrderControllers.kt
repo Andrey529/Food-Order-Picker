@@ -9,8 +9,8 @@ import com.microsoft.azure.functions.annotation.AuthorizationLevel
 import com.microsoft.azure.functions.annotation.FunctionName
 import com.microsoft.azure.functions.annotation.HttpTrigger
 import kotlinx.serialization.decodeFromString
-import kotlinx.serialization.json.Json
 import model.Order
+import products.serializer.ProductSerialization
 import java.util.*
 import java.util.logging.Logger
 
@@ -27,7 +27,7 @@ class OrderControllers {
     private var database: CosmosDatabase? = null
     private var container: CosmosContainer? = null
 
-    private val json = Json
+    private val json = ProductSerialization().json
 
     @FunctionName("AddOrder")
     fun addOrder(
