@@ -27,7 +27,7 @@ class ProductSerialization {
             polymorphic(Drink::class) {
                 subclass(Water::class)
                 subclass(Cola::class)
-                subclass(Pepsi::class)
+                subclass(Cherry::class)
                 subclass(Fanta::class)
             }
         }

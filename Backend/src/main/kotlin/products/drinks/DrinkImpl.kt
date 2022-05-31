@@ -15,7 +15,7 @@ data class Cola(override val price: Int, override val volume: Volume) : Drink {
 }
 
 @kotlinx.serialization.Serializable
-data class Pepsi(override val price: Int, override val volume: Volume) : Drink {
+data class Cherry(override val price: Int, override val volume: Volume) : Drink {
     init {
         require(price > 0) { "Price must be greater than 0" }
     }
