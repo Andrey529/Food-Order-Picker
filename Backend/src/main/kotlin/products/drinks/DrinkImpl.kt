@@ -1,28 +1,30 @@
 package products.drinks
 
+import com.fasterxml.jackson.annotation.JsonProperty
+
 @kotlinx.serialization.Serializable
-data class Water(override val price: Int, override val volume: Volume) : Drink {
+data class Water(@JsonProperty("id") override val price: Int, @JsonProperty("id") override val volume: Volume) : Drink {
     init {
         require(price > 0) { "Price must be greater than 0" }
     }
 }
 
 @kotlinx.serialization.Serializable
-data class Cola(override val price: Int, override val volume: Volume) : Drink {
+data class Cola(@JsonProperty("id") override val price: Int, @JsonProperty("id") override val volume: Volume) : Drink {
     init {
         require(price > 0) { "Price must be greater than 0" }
     }
 }
 
 @kotlinx.serialization.Serializable
-data class Cherry(override val price: Int, override val volume: Volume) : Drink {
+data class Cherry(@JsonProperty("id") override val price: Int, @JsonProperty("id") override val volume: Volume) : Drink {
     init {
         require(price > 0) { "Price must be greater than 0" }
     }
 }
 
 @kotlinx.serialization.Serializable
-data class Fanta(override val price: Int, override val volume: Volume) : Drink {
+data class Fanta(@JsonProperty("id") override val price: Int, @JsonProperty("id") override val volume: Volume) : Drink {
     init {
         require(price > 0) { "Price must be greater than 0" }
     }
