@@ -53,7 +53,9 @@ class OrderControllers {
             context.logger.info("Deserialized order from request body.")
 
             val id = UUID.randomUUID().toString()
-            order.orderId = id
+            order.id = id
+
+            context.logger.info("Request body with id: ${requestBody.get()}")
 
             createDatabaseIfNotExists(context.logger)
             createContainerIfNotExists(context.logger)
