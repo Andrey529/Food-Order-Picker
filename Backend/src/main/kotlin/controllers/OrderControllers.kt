@@ -9,6 +9,7 @@ import com.microsoft.azure.functions.annotation.AuthorizationLevel
 import com.microsoft.azure.functions.annotation.FunctionName
 import com.microsoft.azure.functions.annotation.HttpTrigger
 import kotlinx.serialization.decodeFromString
+import kotlinx.serialization.encodeToString
 import model.Order
 import products.serializer.ProductSerialization
 import java.util.*
@@ -55,7 +56,7 @@ class OrderControllers {
             val id = UUID.randomUUID().toString()
             order.id = id
 
-            context.logger.info("Request body with id: ${requestBody.get()}")
+            context.logger.info("Request body with id: ${json.encodeToString(order)}")
 
             createDatabaseIfNotExists(context.logger)
             createContainerIfNotExists(context.logger)
@@ -78,7 +79,7 @@ class OrderControllers {
 
 
     @FunctionName("GetOrder")
-    fun getBurger(
+    fun getOrder(
         @HttpTrigger(name = "req",
             methods = [HttpMethod.GET],
             authLevel = AuthorizationLevel.ANONYMOUS,
@@ -123,6 +124,47 @@ class OrderControllers {
 //            }
         }
         context.logger.info("Read order failed, there is no id value in query parameters.")
+        return request
+            .createResponseBuilder(HttpStatus.BAD_REQUEST)
+            .body("Please pass an id on the query string")
+            .build()
+    }
+
+
+    @FunctionName("DeleteOrder")
+    fun DeleteOrder(
+        @HttpTrigger(name = "req",
+            methods = [HttpMethod.DELETE],
+            authLevel = AuthorizationLevel.ANONYMOUS,
+            route = "order"
+        ) request: HttpRequestMessage<Optional<String?>>,
+        context: ExecutionContext,
+    ): HttpResponseMessage {
+        context.logger.info("DeleteOrder HTTP trigger function invoked with delete method.")
+
+        val id = request.queryParameters["id"]
+
+        if (id != null) {
+            createDatabaseIfNotExists(context.logger)
+            createContainerIfNotExists(context.logger)
+
+            return if (container != null) {
+                container!!.deleteItem(id.toString(), PartitionKey(id), CosmosItemRequestOptions())
+                context.logger.info("Item successfully deleted with id = $id")
+
+                request
+                    .createResponseBuilder(HttpStatus.OK)
+                    .body(id)
+                    .build()
+            } else {
+                context.logger.info("Delete order failed, because container with order does not exist.")
+                request
+                    .createResponseBuilder(HttpStatus.BAD_REQUEST)
+                    .body("Container with order data does not exist.")
+                    .build()
+            }
+        }
+        context.logger.info("Delete order failed, there is no id value in query parameters.")
         return request
             .createResponseBuilder(HttpStatus.BAD_REQUEST)
             .body("Please pass an id on the query string")
