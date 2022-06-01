@@ -1,11 +1,20 @@
+
 import com.benasher44.uuid.Uuid
 import csstype.*
-import kotlinVideo.KotlinVideo
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.launch
+import products.Product
+import products.ProductType
 import products.ProductWithLink
-import products.burgers.BigMack
+import products.burgers.Burger
 import products.burgers.BurgerSize
+import products.burgers.BurgerType
+import products.desserts.Dessert
+import products.desserts.DessertType
+import products.desserts.Filling
+import products.drinks.Drink
+import products.drinks.DrinkType
+import products.drinks.Volume
 import react.FC
 import react.Props
 import react.css.css
@@ -41,70 +50,117 @@ suspend fun fetchVideos(): List<KotlinVideo> = coroutineScope {
     }.awaitAll()
 }*/
 
-val listProducts = listOf(
-    ProductWithLink(BigMack(390, BurgerSize.DOUBLE), "Images/burger.png", 1)
-)
 
-val fetchVideos = listOf(
-    KotlinVideo(
-        1,
-        "Burger",
-        "burger",
-        "https://youtu.be/PsaFVLr8t4E",
-        "Images/burger.png",
+// BigMack 140/199
+// Cheese 53/125
+// BigTasty 249/325
+// Hum 51/130
+
+// Water 50/70/100
+// Cola 69/79/129
+// Pepsi(Cherry?) 69/79/129
+// Fanta 69/79/129
+
+// Pie 170/170
+// Pancacke 130/130
+// Donut 89/89
+
+
+val listProducts = listOf(
+    ProductWithLink(
+        id = 1,
+        Burger(140, BurgerType.BIGMAC, BurgerSize.SINGLE),
+        ProductType.BIGMAC,
+        "Images/bigmack.png",
         Uuid(Random.nextLong(), Random.nextLong())
     ),
-    KotlinVideo(
-        2,
-        "CheeseBurger",
-        "burger",
-        "https://youtu.be/Fzt_9I733Yg",
+    ProductWithLink(
+        id = 2,
+        Burger(53, BurgerType.CHEESEBURGER, BurgerSize.SINGLE),
+        ProductType.CHEESEBURGER,
         "Images/cheeseburger.png",
         Uuid(Random.nextLong(), Random.nextLong())
     ),
-    KotlinVideo(
-        3,
-        "French-Fries",
-        "snack",
-        "https://youtu.be/pSiZVAeReeg",
-        "Images/french-fries.png",
+    ProductWithLink(
+        id = 3,
+        Burger(249, BurgerType.BIGTASTY, BurgerSize.SINGLE),
+        ProductType.BIGTASTY,
+        "Images/bigtasty.png",
         Uuid(Random.nextLong(), Random.nextLong())
     ),
-    KotlinVideo(
-        4,
-        "Coca-Cola",
-        "drink",
-        "https://youtu.be/pSiZVAeReeg",
+    ProductWithLink(
+        id = 4,
+        Burger(51, BurgerType.HAMBURGER, BurgerSize.SINGLE),
+        ProductType.HAMBURGER,
+        "Images/burger.png",
+        Uuid(Random.nextLong(), Random.nextLong())
+    ),
+
+    ProductWithLink(
+        id = 5,
+        Drink(50, DrinkType.WATER, Volume.THIRD_OF_LITER),
+        ProductType.WATER,
+        "Images/water.png",
+        Uuid(Random.nextLong(), Random.nextLong())
+    ),
+    ProductWithLink(
+        id = 6,
+        Drink(69, DrinkType.COLA, Volume.THIRD_OF_LITER),
+        ProductType.COLA,
         "Images/coke.png",
         Uuid(Random.nextLong(), Random.nextLong())
     ),
-    KotlinVideo(
-        5,
-        "Coca-Cola Cherry",
-        "drink",
-        "https://youtu.be/pSiZVAeReeg",
+    ProductWithLink(
+        id = 7,
+        Drink(69, DrinkType.CHERRY, Volume.THIRD_OF_LITER),
+        ProductType.CHERRY,
         "Images/coca-cola-cherry.png",
         Uuid(Random.nextLong(), Random.nextLong())
-    )
+    ),
+    ProductWithLink(
+        id = 8,
+        Drink(69, DrinkType.FANTA, Volume.THIRD_OF_LITER),
+        ProductType.FANTA,
+        "Images/fanta.png",
+        Uuid(Random.nextLong(), Random.nextLong())
+    ),
 
+    ProductWithLink(
+        id = 9,
+        Dessert(170, DessertType.PIE, Filling.VANILLA_CREAM),
+        ProductType.PIE,
+        "Images/pie.png",
+        Uuid(Random.nextLong(), Random.nextLong())
+    ),
+    ProductWithLink(
+        id = 10,
+        Dessert(130, DessertType.PANCAKE, Filling.VANILLA_CREAM),
+        ProductType.PANCAKE,
+        "Images/pancake.png",
+        Uuid(Random.nextLong(), Random.nextLong())
+    ),
+    ProductWithLink(
+        id = 11,
+        Dessert(89, DessertType.DONUT, Filling.VANILLA_CREAM),
+        ProductType.DONUT,
+        "Images/donut.png",
+        Uuid(Random.nextLong(), Random.nextLong())
+    )
 )
 
-var Order = mutableListOf<KotlinVideo>()
-
-var filterButtons = 5
 
 val mainScope = MainScope()
 
 val App = FC<Props> {
-    var currentWatchVideo: KotlinVideo? by useState(null)
-    var currentUnWatchVideo: KotlinVideo? by useState(null)
+    var currentWatchVideo: ProductWithLink? by useState(null)
+    var currentUnWatchVideo: ProductWithLink? by useState(null)
 
-    var unwatchedVideos: List<KotlinVideo> by useState(emptyList())
-    var watchedVideos: List<KotlinVideo> by useState(emptyList())
+    var unwatchedVideos: List<ProductWithLink> by useState(emptyList())
+    var watchedVideos: List<ProductWithLink> by useState(emptyList())
 
     useEffectOnce {
         mainScope.launch {
-            unwatchedVideos = fetchVideos
+            unwatchedVideos = listProducts
         }
     }
     div {
@@ -254,9 +310,6 @@ val App = FC<Props> {
                         src = "Images/burger.png"
                         title = "Перейти в раздел Бургеров"
                     }
-                    onClick = {
-                        filterButtons = 1
-                    }
                 }
             }
             a {
@@ -280,9 +333,6 @@ val App = FC<Props> {
                         }
                         src = "Images/coke.png"
                         title = "Перейти в раздел Напитков"
-                    }
-                    onClick = {
-                        filterButtons = 2
                     }
                 }
             }
@@ -309,9 +359,6 @@ val App = FC<Props> {
                         src = "Images/french-fries.png"
                         title = "Перейти в раздел Закусок"
                     }
-                    onClick = {
-                        filterButtons = 3
-                    }
                 }
             }
             a {
@@ -334,11 +381,8 @@ val App = FC<Props> {
                             border = Border(4.px, LineStyle.solid, NamedColor.darkred)
                             backgroundColor = NamedColor.gray
                         }
-                        src = "Images/ice-cream.png"
+                        src = "Images/pie.png"
                         title = "Перейти в раздел Десертов"
-                    }
-                    onClick = {
-                        filterButtons = 4
                     }
                 }
             }
@@ -356,9 +400,6 @@ val App = FC<Props> {
                         backgroundColor = NamedColor.gray
                     }
                     +"Весь ассортимент"
-                    onClick = {
-                        filterButtons = 5
-                    }
                 }
             }
         }
@@ -430,40 +471,149 @@ val App = FC<Props> {
             div {
                 h3 {
                     +"Ассортимент"
-                    if(filterButtons == 3){
-                        +"Ассортимент"
+                }
+                VideoList {
+                    videos = unwatchedVideos
+                    selectedVideo = currentUnWatchVideo
+                    onSelectVideo = { video ->
+                        currentUnWatchVideo = video
                     }
                 }
-                    VideoList {
-                        videos = unwatchedVideos
-                        selectedVideo = currentUnWatchVideo
-                        onSelectVideo = { video ->
-                            currentUnWatchVideo = video
-                        }
-                    }
+                // BigMack 140/199
+                // Cheese 53/125
+                // BigTasty 249/325
+                // Hum 51/130
 
+                // Water 50/70/100
+                // Cola 69/79/129
+                // Pepsi(Cherry?) 69/79/129
+                // Fanta 69/79/129
+
+                // Pie 170/170
+                // Pancacke 130/130
+                // Donut 89/89
                 currentUnWatchVideo?.let { curr ->
                     VideoPlayer {
-                        var copy: KotlinVideo
+                        var copy: ProductWithLink
+                        var copyProduct: Product
                         video = curr
                         unwatchedVideo = curr in unwatchedVideos
                         onWatchedButtonPressed = {
                             if (video in unwatchedVideos) {
-                                //unwatchedVideos = unwatchedVideos - video
-                                copy = KotlinVideo(
+                                /*when (video.id) {
+                                    1 -> {
+                                        copyProduct = if (sizeBurger == BurgerSize.SINGLE) {
+                                            BigMac(140, sizeBurger)
+                                        } else {
+                                            BigMac(199, sizeBurger)
+                                        }
+                                    }
+                                    2 -> {
+                                        copyProduct = if (sizeBurger == BurgerSize.SINGLE) {
+                                            CheeseBurger(53, sizeBurger)
+                                        } else {
+                                            CheeseBurger(125, sizeBurger)
+                                        }
+                                    }
+                                    3 -> {
+                                        copyProduct = if (sizeBurger == BurgerSize.SINGLE) {
+                                            BigTasty(249, sizeBurger)
+                                        } else {
+                                            BigTasty(325, sizeBurger)
+                                        }
+                                    }
+                                    4 -> {
+                                        copyProduct = if (sizeBurger == BurgerSize.SINGLE) {
+                                            Hamburger(51, sizeBurger)
+                                        } else {
+                                            Hamburger(130, sizeBurger)
+                                        }
+                                    }
+                                    5 -> {
+                                        copyProduct = when (sizeDrink) {
+                                            Volume.THIRD_OF_LITER -> {
+                                                Water(50, sizeDrink)
+                                            }
+                                            Volume.TWO_THIRDS_OF_LITER -> {
+                                                Water(70, sizeDrink)
+                                            }
+                                            Volume.LITER -> {
+                                                Water(100, sizeDrink)
+                                            }
+                                        }
+                                    }
+                                    6 -> {
+                                        copyProduct = when (sizeDrink) {
+                                            Volume.THIRD_OF_LITER -> {
+                                                Cola(69, sizeDrink)
+                                            }
+                                            Volume.TWO_THIRDS_OF_LITER -> {
+                                                Cola(79, sizeDrink)
+                                            }
+                                            Volume.LITER -> {
+                                                Cola(129, sizeDrink)
+                                            }
+                                        }
+                                    }
+                                    7 -> {
+                                        copyProduct = when (sizeDrink) {
+                                            Volume.THIRD_OF_LITER -> {
+                                                Cherry(69, sizeDrink)
+                                            }
+                                            Volume.TWO_THIRDS_OF_LITER -> {
+                                                Cherry(79, sizeDrink)
+                                            }
+                                            Volume.LITER -> {
+                                                Cherry(129, sizeDrink)
+                                            }
+                                        }
+                                    }
+                                    8 -> {
+                                        copyProduct = when (sizeDrink) {
+                                            Volume.THIRD_OF_LITER -> {
+                                                Fanta(69, sizeDrink)
+                                            }
+                                            Volume.TWO_THIRDS_OF_LITER -> {
+                                                Fanta(79, sizeDrink)
+                                            }
+                                            Volume.LITER -> {
+                                                Fanta(129, sizeDrink)
+                                            }
+                                        }
+                                    }
+                                    9 -> {
+                                        copyProduct = if (fillDessert == Filling.VANILLA_CREAM) {
+                                            Pie(170, fillDessert)
+                                        } else {
+                                            Pie(170, fillDessert)
+                                        }
+                                    }
+                                    10 -> {
+                                        copyProduct = if (fillDessert == Filling.VANILLA_CREAM) {
+                                            Pancake(130, fillDessert)
+                                        } else {
+                                            Pancake(130, fillDessert)
+                                        }
+                                    }
+                                    11 -> {
+                                        copyProduct = if (fillDessert == Filling.VANILLA_CREAM) {
+                                            Donut(89, fillDessert)
+                                        } else {
+                                            Donut(89, fillDessert)
+                                        }
+                                    }
+                                }*/
+                                copy = ProductWithLink(
                                     video.id,
-                                    video.title,
-                                    video.speaker,
-                                    video.videoUrl,
+                                    video.product,
+                                    video.type,
                                     video.image,
                                     Uuid(Random.nextLong(), Random.nextLong())
                                 )
-                                //copy.uniqueUrl = Random.nextInt()
+                                // сделать реализацию строго под каждую позицию, так как имеем в ассортименте id первым параметром
                                 watchedVideos = watchedVideos + copy
-                                //сделать копию объекта видео, добавить в него уникальное свойство, добавить копию в вотчед..
                             } else {
                                 watchedVideos = watchedVideos - video
-                                unwatchedVideos = unwatchedVideos + video
                             }
                         }
                     }

@@ -1,6 +1,6 @@
 
 import csstype.*
-import kotlinVideo.KotlinVideo
+import products.ProductWithLink
 import react.FC
 import react.Props
 import react.css.css
@@ -8,9 +8,9 @@ import react.dom.html.ReactHTML.p
 import react.key
 
 external interface VideoListProps : Props {
-    var videos: List<KotlinVideo>
-    var selectedVideo: KotlinVideo?
-    var onSelectVideo: (KotlinVideo) -> Unit
+    var videos: List<ProductWithLink>
+    var selectedVideo: ProductWithLink?
+    var onSelectVideo: (ProductWithLink) -> Unit
 }
 
 val VideoList = FC<VideoListProps> { props ->
@@ -22,12 +22,13 @@ val VideoList = FC<VideoListProps> { props ->
                 background = NamedColor.lightyellow
                 border = Border(2.px, LineStyle.solid, NamedColor.lightgrey)
                 borderColor = NamedColor.black
-                width = 270.px;
-                height = 50.px;
+                width = 130.px;
+                height = 30.px;
                 marginLeft = 25.px
                 borderRadius = 10.px
                 textAlign = TextAlign.center
             }
+
             key = video.id.toString()
             onClick = {
                 props.onSelectVideo(video)
@@ -36,7 +37,7 @@ val VideoList = FC<VideoListProps> { props ->
                 +"▶ "
             }
 
-            +video.title
+            +video.type.toString()
         }
     }
 
