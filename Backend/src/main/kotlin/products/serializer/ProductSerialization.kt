@@ -5,31 +5,17 @@ import kotlinx.serialization.modules.SerializersModule
 import kotlinx.serialization.modules.polymorphic
 import kotlinx.serialization.modules.subclass
 import products.Product
-import products.burgers.*
-import products.desserts.*
-import products.drinks.*
+import products.burgers.Burger
+import products.desserts.Dessert
+import products.drinks.Drink
 
 
 class ProductSerialization {
     val module = SerializersModule {
         polymorphic(Product::class) {
-            polymorphic(Burger::class) {
-                subclass(CheeseBurger::class)
-                subclass(BigTasty::class)
-                subclass(BigMack::class)
-                subclass(Hamburger::class)
-            }
-            polymorphic(Dessert::class) {
-                subclass(Pie::class)
-                subclass(Pancake::class)
-                subclass(Donut::class)
-            }
-            polymorphic(Drink::class) {
-                subclass(Water::class)
-                subclass(Cola::class)
-                subclass(Cherry::class)
-                subclass(Fanta::class)
-            }
+            subclass(Burger::class)
+            subclass(Drink::class)
+            subclass(Dessert::class)
         }
     }
 
