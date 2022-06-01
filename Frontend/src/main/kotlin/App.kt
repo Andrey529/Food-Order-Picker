@@ -1,9 +1,10 @@
-
 import com.benasher44.uuid.Uuid
 import csstype.*
+import kotlinx.browser.window
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.launch
-import products.Product
+import kotlinx.serialization.encodeToString
+import org.w3c.fetch.RequestInit
 import products.ProductType
 import products.ProductWithLink
 import products.burgers.Burger
@@ -15,6 +16,7 @@ import products.desserts.Filling
 import products.drinks.Drink
 import products.drinks.DrinkType
 import products.drinks.Volume
+import products.serializer.ProductSerialization
 import react.FC
 import react.Props
 import react.css.css
@@ -65,6 +67,7 @@ suspend fun fetchVideos(): List<KotlinVideo> = coroutineScope {
 // Pancacke 130/130
 // Donut 89/89
 
+private val json = ProductSerialization().json
 
 val listProducts = listOf(
     ProductWithLink(
@@ -148,19 +151,54 @@ val listProducts = listOf(
     )
 )
 
+fun test(order: List<ProductWithLink>) {
+
+    val burgersOrder: MutableList<Burger> = mutableListOf()
+    val drinksOrder: MutableList<Drink> = mutableListOf()
+    val dessertsOrder: MutableList<Dessert> = mutableListOf()
+
+    for (i in order.indices) {
+        when (order[i].id) {
+            in 1..4 -> {
+                burgersOrder.add(order[i].product as Burger)
+            }
+            in 5..8 -> {
+                drinksOrder.add(order[i].product as Drink)
+            }
+            in 9..11 -> {
+                dessertsOrder.add(order[i].product as Dessert)
+            }
+        }
+    }
+
+    val requestOrder = products.Order(null, burgers = burgersOrder, drinks = drinksOrder, desserts = dessertsOrder)
+
+    console.log(requestOrder)
+
+    val encodedStr = json.encodeToString(requestOrder)
+
+    console.log(encodedStr)
+
+    window.fetch(
+        "https://food-order-picker.azurewebsites.net/api/order",
+        RequestInit(
+            method = "POST", body = encodedStr
+        )
+    )
+}
 
 val mainScope = MainScope()
 
 val App = FC<Props> {
-    var currentWatchVideo: ProductWithLink? by useState(null)
-    var currentUnWatchVideo: ProductWithLink? by useState(null)
+    var currentOrderProduct: ProductWithLink? by useState(null)
+    var currentAssortmentProduct: ProductWithLink? by useState(null)
 
-    var unwatchedVideos: List<ProductWithLink> by useState(emptyList())
-    var watchedVideos: List<ProductWithLink> by useState(emptyList())
+    var assortmentProducts: List<ProductWithLink> by useState(emptyList())
+    var orderProducts: List<ProductWithLink> by useState(emptyList())
 
     useEffectOnce {
         mainScope.launch {
-            unwatchedVideos = listProducts
+            assortmentProducts = listProducts
         }
     }
     div {
@@ -430,10 +468,10 @@ val App = FC<Props> {
                     }
                     +"Убрать позицию из заказа"
                     onClick = {
-                        currentWatchVideo?.let { curr ->
-                            val video = curr in watchedVideos
-                            if (video) {
-                                watchedVideos = watchedVideos - curr
+                        currentOrderProduct?.let { curr ->
+                            val product = curr in orderProducts
+                            if (product) {
+                                orderProducts = orderProducts - curr
                             }
                         }
                     }
@@ -446,15 +484,26 @@ val App = FC<Props> {
                         backgroundColor = NamedColor.green
                     }
                     onClick = {
-                        watchedVideos = emptyList()
+                        val testOrder = mutableListOf<ProductWithLink>()
+                        for (i in orderProducts.indices) {
+                            testOrder += ProductWithLink(
+                                orderProducts[i].id,
+                                orderProducts[i].product,
+                                orderProducts[i].type,
+                                orderProducts[i].image,
+                                orderProducts[i].uniqueUrl
+                            )
+                        }
+                        test(testOrder)
+                        orderProducts = emptyList()
                     }
                     +"Сделать заказ и подождать"
                 }
-                VideoList {
-                    videos = watchedVideos
-                    selectedVideo = currentWatchVideo
-                    onSelectVideo = { video ->
-                        currentWatchVideo = video
+                ProductList {
+                    products = orderProducts
+                    selectedProduct = currentOrderProduct
+                    onSelectProduct = { product ->
+                        currentOrderProduct = product
                     }
                 }
             }
@@ -472,11 +521,11 @@ val App = FC<Props> {
                 h3 {
                     +"Ассортимент"
                 }
-                VideoList {
-                    videos = unwatchedVideos
-                    selectedVideo = currentUnWatchVideo
-                    onSelectVideo = { video ->
-                        currentUnWatchVideo = video
+                ProductList {
+                    products = assortmentProducts
+                    selectedProduct = currentAssortmentProduct
+                    onSelectProduct = { product ->
+                        currentAssortmentProduct = product
                     }
                 }
                 // BigMack 140/199
@@ -492,128 +541,136 @@ val App = FC<Props> {
                 // Pie 170/170
                 // Pancacke 130/130
                 // Donut 89/89
-                currentUnWatchVideo?.let { curr ->
-                    VideoPlayer {
-                        var copy: ProductWithLink
-                        var copyProduct: Product
-                        video = curr
-                        unwatchedVideo = curr in unwatchedVideos
-                        onWatchedButtonPressed = {
-                            if (video in unwatchedVideos) {
-                                /*when (video.id) {
+                currentAssortmentProduct?.let { curr ->
+                    ProductPlayer {
+                        var copy = listProducts[0]
+                        var copyBurger = Burger(1, BurgerType.NONE, BurgerSize.SINGLE)
+                        var copyDrink = Drink(1, DrinkType.NONE, Volume.TWO_THIRDS_OF_LITER)
+                        var copyDessert = Dessert(1, DessertType.NONE, Filling.VANILLA_CREAM)
+
+                        product = curr
+                        assortmentProduct = curr in assortmentProducts
+                        onOrderButtonPressed = {
+                            if (product in assortmentProducts) {
+                                when (product.id) {
                                     1 -> {
-                                        copyProduct = if (sizeBurger == BurgerSize.SINGLE) {
-                                            BigMac(140, sizeBurger)
+                                        copyBurger = if (sizeBurger == BurgerSize.SINGLE) {
+                                            Burger(140, BurgerType.BIGMAC, BurgerSize.SINGLE)
                                         } else {
-                                            BigMac(199, sizeBurger)
+                                            Burger(199, BurgerType.BIGMAC, BurgerSize.DOUBLE)
                                         }
                                     }
                                     2 -> {
-                                        copyProduct = if (sizeBurger == BurgerSize.SINGLE) {
-                                            CheeseBurger(53, sizeBurger)
+                                        copyBurger = if (sizeBurger == BurgerSize.SINGLE) {
+                                            Burger(53, BurgerType.CHEESEBURGER, BurgerSize.SINGLE)
                                         } else {
-                                            CheeseBurger(125, sizeBurger)
+                                            Burger(125, BurgerType.CHEESEBURGER, BurgerSize.DOUBLE)
                                         }
                                     }
                                     3 -> {
-                                        copyProduct = if (sizeBurger == BurgerSize.SINGLE) {
-                                            BigTasty(249, sizeBurger)
+                                        copyBurger = if (sizeBurger == BurgerSize.SINGLE) {
+                                            Burger(249, BurgerType.BIGTASTY, BurgerSize.SINGLE)
                                         } else {
-                                            BigTasty(325, sizeBurger)
+                                            Burger(325, BurgerType.BIGTASTY, BurgerSize.DOUBLE)
                                         }
                                     }
                                     4 -> {
-                                        copyProduct = if (sizeBurger == BurgerSize.SINGLE) {
-                                            Hamburger(51, sizeBurger)
+                                        copyBurger = if (sizeBurger == BurgerSize.SINGLE) {
+                                            Burger(51, BurgerType.HAMBURGER, BurgerSize.SINGLE)
                                         } else {
-                                            Hamburger(130, sizeBurger)
+                                            Burger(130, BurgerType.HAMBURGER, BurgerSize.DOUBLE)
                                         }
                                     }
                                     5 -> {
-                                        copyProduct = when (sizeDrink) {
-                                            Volume.THIRD_OF_LITER -> {
-                                                Water(50, sizeDrink)
-                                            }
-                                            Volume.TWO_THIRDS_OF_LITER -> {
-                                                Water(70, sizeDrink)
-                                            }
-                                            Volume.LITER -> {
-                                                Water(100, sizeDrink)
-                                            }
+                                        copyDrink = if (sizeDrink == Volume.THIRD_OF_LITER) {
+                                            Drink(50, DrinkType.WATER, Volume.THIRD_OF_LITER)
+                                        } else if (sizeDrink == Volume.TWO_THIRDS_OF_LITER) {
+                                            Drink(70, DrinkType.WATER, Volume.TWO_THIRDS_OF_LITER)
+                                        } else {
+                                            Drink(100, DrinkType.WATER, Volume.LITER)
                                         }
                                     }
                                     6 -> {
-                                        copyProduct = when (sizeDrink) {
-                                            Volume.THIRD_OF_LITER -> {
-                                                Cola(69, sizeDrink)
-                                            }
-                                            Volume.TWO_THIRDS_OF_LITER -> {
-                                                Cola(79, sizeDrink)
-                                            }
-                                            Volume.LITER -> {
-                                                Cola(129, sizeDrink)
-                                            }
+                                        copyDrink = if (sizeDrink == Volume.THIRD_OF_LITER) {
+                                            Drink(69, DrinkType.COLA, Volume.THIRD_OF_LITER)
+                                        } else if (sizeDrink == Volume.TWO_THIRDS_OF_LITER) {
+                                            Drink(79, DrinkType.COLA, Volume.TWO_THIRDS_OF_LITER)
+                                        } else {
+                                            Drink(129, DrinkType.COLA, Volume.LITER)
                                         }
                                     }
                                     7 -> {
-                                        copyProduct = when (sizeDrink) {
-                                            Volume.THIRD_OF_LITER -> {
-                                                Cherry(69, sizeDrink)
-                                            }
-                                            Volume.TWO_THIRDS_OF_LITER -> {
-                                                Cherry(79, sizeDrink)
-                                            }
-                                            Volume.LITER -> {
-                                                Cherry(129, sizeDrink)
-                                            }
+                                        copyDrink = if (sizeDrink == Volume.THIRD_OF_LITER) {
+                                            Drink(69, DrinkType.CHERRY, Volume.THIRD_OF_LITER)
+                                        } else if (sizeDrink == Volume.TWO_THIRDS_OF_LITER) {
+                                            Drink(79, DrinkType.CHERRY, Volume.TWO_THIRDS_OF_LITER)
+                                        } else {
+                                            Drink(129, DrinkType.CHERRY, Volume.LITER)
                                         }
                                     }
                                     8 -> {
-                                        copyProduct = when (sizeDrink) {
-                                            Volume.THIRD_OF_LITER -> {
-                                                Fanta(69, sizeDrink)
-                                            }
-                                            Volume.TWO_THIRDS_OF_LITER -> {
-                                                Fanta(79, sizeDrink)
-                                            }
-                                            Volume.LITER -> {
-                                                Fanta(129, sizeDrink)
-                                            }
+                                        copyDrink = if (sizeDrink == Volume.THIRD_OF_LITER) {
+                                            Drink(69, DrinkType.FANTA, Volume.THIRD_OF_LITER)
+                                        } else if (sizeDrink == Volume.TWO_THIRDS_OF_LITER) {
+                                            Drink(79, DrinkType.FANTA, Volume.TWO_THIRDS_OF_LITER)
+                                        } else {
+                                            Drink(129, DrinkType.FANTA, Volume.LITER)
                                         }
                                     }
                                     9 -> {
-                                        copyProduct = if (fillDessert == Filling.VANILLA_CREAM) {
-                                            Pie(170, fillDessert)
+                                        copyDessert = if (fillDessert == Filling.VANILLA_CREAM) {
+                                            Dessert(170, DessertType.PIE, Filling.VANILLA_CREAM)
                                         } else {
-                                            Pie(170, fillDessert)
+                                            Dessert(170, DessertType.PIE, Filling.CHOCOLATE_CREAM)
                                         }
                                     }
                                     10 -> {
-                                        copyProduct = if (fillDessert == Filling.VANILLA_CREAM) {
-                                            Pancake(130, fillDessert)
+                                        copyDessert = if (fillDessert == Filling.VANILLA_CREAM) {
+                                            Dessert(130, DessertType.PANCAKE, Filling.VANILLA_CREAM)
                                         } else {
-                                            Pancake(130, fillDessert)
+                                            Dessert(130, DessertType.PANCAKE, Filling.CHOCOLATE_CREAM)
                                         }
                                     }
                                     11 -> {
-                                        copyProduct = if (fillDessert == Filling.VANILLA_CREAM) {
-                                            Donut(89, fillDessert)
+                                        copyDessert = if (fillDessert == Filling.VANILLA_CREAM) {
+                                            Dessert(89, DessertType.DONUT, Filling.VANILLA_CREAM)
                                         } else {
-                                            Donut(89, fillDessert)
+                                            Dessert(89, DessertType.DONUT, Filling.CHOCOLATE_CREAM)
                                         }
                                     }
-                                }*/
-                                copy = ProductWithLink(
-                                    video.id,
-                                    video.product,
-                                    video.type,
-                                    video.image,
-                                    Uuid(Random.nextLong(), Random.nextLong())
-                                )
+                                }
+                                if ((product.id >= 1) && (product.id <= 4)) {
+                                    copy = ProductWithLink(
+                                        product.id,
+                                        copyBurger,
+                                        product.type,
+                                        product.image,
+                                        Uuid(Random.nextLong(), Random.nextLong())
+                                    )
+                                }
+                                if ((product.id >= 5) && (product.id <= 8)) {
+                                    copy = ProductWithLink(
+                                        product.id,
+                                        copyDrink,
+                                        product.type,
+                                        product.image,
+                                        Uuid(Random.nextLong(), Random.nextLong())
+                                    )
+                                }
+                                if ((product.id >= 9) && (product.id <= 11)) {
+                                    copy = ProductWithLink(
+                                        product.id,
+                                        copyDessert,
+                                        product.type,
+                                        product.image,
+                                        Uuid(Random.nextLong(), Random.nextLong())
+                                    )
+                                }
+
                                 // сделать реализацию строго под каждую позицию, так как имеем в ассортименте id первым параметром
-                                watchedVideos = watchedVideos + copy
+                                orderProducts = orderProducts + copy
                             } else {
-                                watchedVideos = watchedVideos - video
+                                orderProducts = orderProducts - product
                             }
                         }
                     }

@@ -7,16 +7,16 @@ import react.css.css
 import react.dom.html.ReactHTML.p
 import react.key
 
-external interface VideoListProps : Props {
-    var videos: List<ProductWithLink>
-    var selectedVideo: ProductWithLink?
-    var onSelectVideo: (ProductWithLink) -> Unit
+external interface ProductListProps : Props {
+    var products: List<ProductWithLink>
+    var selectedProduct: ProductWithLink?
+    var onSelectProduct: (ProductWithLink) -> Unit
 }
 
-val VideoList = FC<VideoListProps> { props ->
+val ProductList = FC<ProductListProps> { props ->
 
 
-    for (video in props.videos) {
+    for (product in props.products) {
         p {
             css {
                 background = NamedColor.lightyellow
@@ -29,15 +29,15 @@ val VideoList = FC<VideoListProps> { props ->
                 textAlign = TextAlign.center
             }
 
-            key = video.id.toString()
+            key = product.id.toString()
             onClick = {
-                props.onSelectVideo(video)
+                props.onSelectProduct(product)
             }
-            if (video.uniqueUrl == props.selectedVideo?.uniqueUrl) {
+            if (product.uniqueUrl == props.selectedProduct?.uniqueUrl) {
                 +"▶ "
             }
 
-            +video.type.toString()
+            +product.type.toString()
         }
     }
 
