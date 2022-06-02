@@ -4,6 +4,7 @@ import com.azure.cosmos.CosmosClientBuilder
 import com.azure.cosmos.CosmosContainer
 import com.azure.cosmos.CosmosDatabase
 import com.azure.cosmos.models.*
+import com.azure.cosmos.util.CosmosPagedIterable
 import com.microsoft.azure.functions.*
 import com.microsoft.azure.functions.annotation.AuthorizationLevel
 import com.microsoft.azure.functions.annotation.FunctionName
@@ -24,12 +25,15 @@ class OrderControllers {
 
     private val databaseName = "Products"
     private val containerName = "Orders"
+    private val partionKeyPath = "/id"
 
     private var database: CosmosDatabase? = null
     private var container: CosmosContainer? = null
 
     private val json = ProductSerialization().json
 
+    // POST: api/order
+    // body: <Json with order>
     @FunctionName("AddOrder")
     fun addOrder(
         @HttpTrigger(name = "req",
@@ -77,7 +81,7 @@ class OrderControllers {
         }
     }
 
-
+    // GET: api/order?id=<orderId>
     @FunctionName("GetOrder")
     fun getOrder(
         @HttpTrigger(name = "req",
@@ -92,36 +96,43 @@ class OrderControllers {
         val id = request.queryParameters["id"]
 
         if (id != null) {
-            createDatabaseIfNotExists(context.logger)
-            createContainerIfNotExists(context.logger)
+            try {
+                createDatabaseIfNotExists(context.logger)
+                createContainerIfNotExists(context.logger)
 
-            if (container != null) {
-                val item: CosmosItemResponse<Order> = container!!.readItem(id, PartitionKey(id), Order::class.java)
-                val requestCharge = item.requestCharge
-                val requestLatency: java.time.Duration? = item.duration
-                context.logger.info("Item successfully read with id ${item.item} with a charge of $requestCharge and within duration $requestLatency")
+                if (container != null) {
+                    val item: CosmosItemResponse<Order> = container!!.readItem(id, PartitionKey(id), Order::class.java)
+                    val requestCharge = item.requestCharge
+                    val requestLatency: java.time.Duration? = item.duration
+                    context.logger.info("Item successfully read with id ${item.item} with a charge of $requestCharge and within duration $requestLatency")
 
-                return request
-                    .createResponseBuilder(HttpStatus.OK)
-                    .body(item.item)
-                    .build()
-            } else {
-                context.logger.info("Read order failed, because container with order does not exist.")
+                    cosmosClient.close()
+                    context.logger.info("Close connection with CosmosDB.")
+
+                    return request
+                        .createResponseBuilder(HttpStatus.OK)
+                        .body(item.item)
+                        .build()
+                } else {
+                    cosmosClient.close()
+                    context.logger.info("Close connection with CosmosDB.")
+
+                    context.logger.info("Read order failed, because container with order does not exist.")
+                    return request
+                        .createResponseBuilder(HttpStatus.BAD_REQUEST)
+                        .body("Container with order data does not exist.")
+                        .build()
+                }
+            } catch (e: Exception) {
+                cosmosClient.close()
+                context.logger.info("Close connection with CosmosDB.")
+
+                context.logger.info("Read order failed with $e.")
                 return request
                     .createResponseBuilder(HttpStatus.BAD_REQUEST)
-                    .body("Container with order data does not exist.")
+                    .body("Read order failed.")
                     .build()
             }
-
-//            try {
-//
-//            } catch (e: Exception) {
-//                context.logger.info("Read burger failed with $e.")
-//                return request
-//                    .createResponseBuilder(HttpStatus.BAD_REQUEST)
-//                    .body("Read burger failed.")
-//                    .build()
-//            }
         }
         context.logger.info("Read order failed, there is no id value in query parameters.")
         return request
@@ -130,7 +141,61 @@ class OrderControllers {
             .build()
     }
 
+    // GET: api/order
+    @FunctionName("GetOrders")
+    fun getOrders(
+        @HttpTrigger(name = "req",
+            methods = [HttpMethod.GET],
+            authLevel = AuthorizationLevel.ANONYMOUS,
+            route = "order"
+        ) request: HttpRequestMessage<Optional<String?>>,
+        context: ExecutionContext,
+    ): HttpResponseMessage {
+        context.logger.info("GetOrders HTTP trigger function invoked with get method.")
 
+        try {
+            createDatabaseIfNotExists(context.logger)
+            createContainerIfNotExists(context.logger)
+
+            if (container != null) {
+                val items: CosmosPagedIterable<Order> = container!!.readAllItems(PartitionKey(""), Order::class.java)
+                context.logger.info("Items successfully read")
+
+                val listItems = mutableListOf<Order>()
+                items.forEach {
+                    listItems.add(it)
+                }
+
+                cosmosClient.close()
+                context.logger.info("Close connection with CosmosDB.")
+
+                return request
+                    .createResponseBuilder(HttpStatus.OK)
+                    .body(json.encodeToString(listItems))
+                    .build()
+            } else {
+                cosmosClient.close()
+                context.logger.info("Close connection with CosmosDB.")
+
+                context.logger.info("Read orders failed, because container with orders does not exist.")
+                return request
+                    .createResponseBuilder(HttpStatus.BAD_REQUEST)
+                    .body("Container with order data does not exist.")
+                    .build()
+            }
+        } catch (e: Exception) {
+            cosmosClient.close()
+            context.logger.info("Close connection with CosmosDB.")
+
+            context.logger.info("Read orders failed with $e.")
+            return request
+                .createResponseBuilder(HttpStatus.BAD_REQUEST)
+                .body("Read orders failed.")
+                .build()
+        }
+    }
+
+    // DELETE: api/order?id=<orderId>
     @FunctionName("DeleteOrder")
     fun DeleteOrder(
         @HttpTrigger(name = "req",
@@ -145,22 +210,39 @@ class OrderControllers {
         val id = request.queryParameters["id"]
 
         if (id != null) {
-            createDatabaseIfNotExists(context.logger)
-            createContainerIfNotExists(context.logger)
+            try {
+                createDatabaseIfNotExists(context.logger)
+                createContainerIfNotExists(context.logger)
 
-            return if (container != null) {
-                container!!.deleteItem(id.toString(), PartitionKey(id), CosmosItemRequestOptions())
-                context.logger.info("Item successfully deleted with id = $id")
+                return if (container != null) {
+                    container!!.deleteItem(id.toString(), PartitionKey(id), CosmosItemRequestOptions())
+                    context.logger.info("Item successfully deleted with id = $id")
 
-                request
-                    .createResponseBuilder(HttpStatus.OK)
-                    .body(id)
-                    .build()
-            } else {
-                context.logger.info("Delete order failed, because container with order does not exist.")
-                request
+                    cosmosClient.close()
+                    context.logger.info("Close connection with CosmosDB.")
+
+                    request
+                        .createResponseBuilder(HttpStatus.OK)
+                        .body(id)
+                        .build()
+                } else {
+                    cosmosClient.close()
+                    context.logger.info("Close connection with CosmosDB.")
+
+                    context.logger.info("Delete order failed, because container with order does not exist.")
+                    request
+                        .createResponseBuilder(HttpStatus.BAD_REQUEST)
+                        .body("Container with order data does not exist.")
+                        .build()
+                }
+            } catch (e: Exception) {
+                cosmosClient.close()
+                context.logger.info("Close connection with CosmosDB.")
+
+                context.logger.info("Delete order failed with $e.")
+                return request
                     .createResponseBuilder(HttpStatus.BAD_REQUEST)
-                    .body("Container with order data does not exist.")
+                    .body("Delete order failed.")
                     .build()
             }
         }
@@ -189,7 +271,7 @@ class OrderControllers {
     private fun createContainerIfNotExists(logger: Logger) {
         logger.info("Create container $containerName if not exists.")
 
-        val containerProperties = CosmosContainerProperties(containerName, "/id")
+        val containerProperties = CosmosContainerProperties(containerName, partionKeyPath)
 
         val cosmosContainerResponse: CosmosContainerResponse =
             database!!.createContainerIfNotExists(containerProperties, ThroughputProperties.createManualThroughput(400))
