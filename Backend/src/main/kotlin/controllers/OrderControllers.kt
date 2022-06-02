@@ -141,13 +141,13 @@ class OrderControllers {
             .build()
     }
 
-    // GET: api/order
+    // GET: api/orders
     @FunctionName("GetOrders")
     fun getOrders(
         @HttpTrigger(name = "req",
             methods = [HttpMethod.GET],
             authLevel = AuthorizationLevel.ANONYMOUS,
-            route = "order"
+            route = "orders"
         ) request: HttpRequestMessage<Optional<String?>>,
         context: ExecutionContext,
     ): HttpResponseMessage {
