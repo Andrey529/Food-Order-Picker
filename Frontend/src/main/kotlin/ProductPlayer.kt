@@ -13,16 +13,16 @@ import react.dom.html.ReactHTML.h3
 import react.dom.html.ReactHTML.h4
 import react.dom.html.ReactHTML.img
 
-external interface VideoPlayerProps : Props {
-    var video: ProductWithLink
-    var onWatchedButtonPressed: (ProductWithLink) -> Unit
-    var unwatchedVideo: Boolean
+external interface ProductPlayerProps : Props {
+    var product: ProductWithLink
+    var onOrderButtonPressed: (ProductWithLink) -> Unit
+    var assortmentProduct: Boolean
     var sizeBurger: BurgerSize
     var sizeDrink: Volume
     var fillDessert: Filling
 }
 
-val VideoPlayer = FC<VideoPlayerProps> { props ->
+val ProductPlayer = FC<ProductPlayerProps> { props ->
     div {
         css {
             position = Position.absolute
@@ -30,12 +30,12 @@ val VideoPlayer = FC<VideoPlayerProps> { props ->
             right = 30.pct
         }
         h3 {
-            +props.video.type.toString()
+            +props.product.type.toString()
         }
         h4 {
-            +"price:${props.video.product.price}"
+            +"price:${props.product.product.price}"
         }
-        when (props.video.type) {
+        when (props.product.type) {
             ProductType.BIGTASTY, ProductType.HAMBURGER,ProductType.CHEESEBURGER,ProductType.BIGMAC -> {
                 button {
                     css {
@@ -45,7 +45,7 @@ val VideoPlayer = FC<VideoPlayerProps> { props ->
                         textAlign = TextAlign.center
                     }
                     onClick = {
-                        props.onWatchedButtonPressed(props.video)
+                        props.onOrderButtonPressed(props.product)
                         props.sizeBurger = BurgerSize.SINGLE
                     }
                     +"Добавить в заказ стандартный размер"
@@ -58,7 +58,7 @@ val VideoPlayer = FC<VideoPlayerProps> { props ->
                         textAlign = TextAlign.center
                     }
                     onClick = {
-                        props.onWatchedButtonPressed(props.video)
+                        props.onOrderButtonPressed(props.product)
                         props.sizeBurger = BurgerSize.DOUBLE
                     }
                     +"Добавить в заказ увеличенный размер"
@@ -73,7 +73,7 @@ val VideoPlayer = FC<VideoPlayerProps> { props ->
                         textAlign = TextAlign.center
                     }
                     onClick = {
-                        props.onWatchedButtonPressed(props.video)
+                        props.onOrderButtonPressed(props.product)
                         props.sizeDrink = Volume.THIRD_OF_LITER
                     }
                     +"Добавить в заказ 0.3 л"
@@ -86,7 +86,7 @@ val VideoPlayer = FC<VideoPlayerProps> { props ->
                         textAlign = TextAlign.center
                     }
                     onClick = {
-                        props.onWatchedButtonPressed(props.video)
+                        props.onOrderButtonPressed(props.product)
                         props.sizeDrink = Volume.TWO_THIRDS_OF_LITER
                     }
                     +"Добавить в заказ 0.6 л"
@@ -99,7 +99,7 @@ val VideoPlayer = FC<VideoPlayerProps> { props ->
                         textAlign = TextAlign.center
                     }
                     onClick = {
-                        props.onWatchedButtonPressed(props.video)
+                        props.onOrderButtonPressed(props.product)
                         props.sizeDrink = Volume.LITER
                     }
                     +"Добавить в заказ 1.0 л"
@@ -115,7 +115,7 @@ val VideoPlayer = FC<VideoPlayerProps> { props ->
                         textAlign = TextAlign.center
                     }
                     onClick = {
-                        props.onWatchedButtonPressed(props.video)
+                        props.onOrderButtonPressed(props.product)
                         props.fillDessert = Filling.CHOCOLATE_CREAM
                     }
                     +"Добавить в заказ с шоколадной начинкой"
@@ -128,7 +128,7 @@ val VideoPlayer = FC<VideoPlayerProps> { props ->
                         textAlign = TextAlign.center
                     }
                     onClick = {
-                        props.onWatchedButtonPressed(props.video)
+                        props.onOrderButtonPressed(props.product)
                         props.fillDessert = Filling.VANILLA_CREAM
                     }
                     +"Добавить в заказ с ванильной начинкой"
@@ -142,7 +142,7 @@ val VideoPlayer = FC<VideoPlayerProps> { props ->
                 marginBottom = 10.px
             }
             img {
-                src = props.video.image
+                src = props.product.image
             }
         }
     }

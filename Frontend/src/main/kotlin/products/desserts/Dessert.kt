@@ -6,7 +6,7 @@ import products.Product
 data class Dessert(
     override val price: Int,
     val dessertType: DessertType,
-    val filling: Filling,
+    var filling: Filling,
 ) : Product {
     init {
         require(price > 0) { "Price must be greater than 0" }
