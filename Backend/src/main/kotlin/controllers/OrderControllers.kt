@@ -5,6 +5,8 @@ import com.azure.cosmos.CosmosContainer
 import com.azure.cosmos.CosmosDatabase
 import com.azure.cosmos.models.*
 import com.azure.cosmos.util.CosmosPagedIterable
+import com.azure.identity.DefaultAzureCredentialBuilder
+import com.azure.security.keyvault.secrets.SecretClientBuilder
 import com.microsoft.azure.functions.*
 import com.microsoft.azure.functions.annotation.AuthorizationLevel
 import com.microsoft.azure.functions.annotation.FunctionName
@@ -16,15 +18,24 @@ import products.serializer.ProductSerialization
 import java.util.*
 import java.util.logging.Logger
 
+
 class OrderControllers {
 
-    private var cosmosClient = CosmosClientBuilder()
-        .endpoint("https://food-order-picker-db.documents.azure.com:443/")
-        .key("SkcGhJ0IzZQOv6iYCwkjAMuYvWXZN8YmOiavkO2dgrhp51hjScLfJXw2LBhhLFk6sd49DlNiWYuEJUxiGhbN2g==")
+    private var secretClient = SecretClientBuilder()
+        .vaultUrl("https://order-picker-key-vault.vault.azure.net/")
+        .credential(DefaultAzureCredentialBuilder().build())
         .buildClient()
 
-    private val databaseName = "Products"
-    private val containerName = "Orders"
+    private var cosmosClientEndpoint = secretClient.getSecret("food-order-picker-db-url")
+    private var cosmosClientKey = secretClient.getSecret("food-order-picker-db-key")
+
+    private var cosmosClient = CosmosClientBuilder()
+        .endpoint(cosmosClientEndpoint.value)
+        .key(cosmosClientKey.value)
+        .buildClient()
+
+    private val databaseName = secretClient.getSecret("food-order-picker-db-databaseName").value
+    private val containerName = secretClient.getSecret("food-order-picker-db-containerName").value
     private val partionKeyPath = "/id"
 
     private var database: CosmosDatabase? = null
