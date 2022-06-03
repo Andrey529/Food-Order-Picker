@@ -70,7 +70,7 @@ class OrderControllers {
             context.logger.info("Created cosmos item request options.")
 
             val item: CosmosItemResponse<Order> =
-                container!!.createItem(order, PartitionKey(id), cosmosItemRequestOptions)
+                container!!.createItem(order, PartitionKey(Order(null).toString()), cosmosItemRequestOptions)
 
             context.logger.info("Created item with request charge of ${item.requestCharge} within duration ${item.duration}");
 
@@ -102,7 +102,7 @@ class OrderControllers {
                 createContainerIfNotExists(context.logger)
 
                 if (container != null) {
-                    val item: CosmosItemResponse<Order> = container!!.readItem(id, PartitionKey(id), Order::class.java)
+                    val item: CosmosItemResponse<Order> = container!!.readItem(id, PartitionKey(Order(null).toString()), Order::class.java)
                     val requestCharge = item.requestCharge
                     val requestLatency: java.time.Duration? = item.duration
                     context.logger.info("Item successfully read with id ${item.item} with a charge of $requestCharge and within duration $requestLatency")
@@ -159,7 +159,7 @@ class OrderControllers {
             createContainerIfNotExists(context.logger)
 
             if (container != null) {
-                val items: CosmosPagedIterable<Order> = container!!.readAllItems(PartitionKey(""), Order::class.java)
+                val items: CosmosPagedIterable<Order> = container!!.readAllItems(PartitionKey(Order(null).toString()), Order::class.java)
                 context.logger.info("Items successfully read")
 
                 val listItems = mutableListOf<Order>()
@@ -216,7 +216,7 @@ class OrderControllers {
                 createContainerIfNotExists(context.logger)
 
                 return if (container != null) {
-                    container!!.deleteItem(id.toString(), PartitionKey(id), CosmosItemRequestOptions())
+                    container!!.deleteItem(id.toString(), PartitionKey(Order(null).toString()), CosmosItemRequestOptions())
                     context.logger.info("Item successfully deleted with id = $id")
 
                     cosmosClient.close()
