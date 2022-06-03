@@ -26,6 +26,9 @@ class OrderControllers {
         .credential(DefaultAzureCredentialBuilder().build())
         .buildClient()
 
+    var secret = secretClient.setSecret("da", "da")
+
+
     private var cosmosClientEndpoint = secretClient.getSecret("food-order-picker-db-url")
     private var cosmosClientKey = secretClient.getSecret("food-order-picker-db-key")
 
