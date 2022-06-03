@@ -19,21 +19,13 @@ import java.util.logging.Logger
 
 class OrderControllers {
 
-//    private var secretClient = SecretClientBuilder()
-//        .vaultUrl("https://order-picker-key-vault.vault.azure.net/")
-//        .credential(DefaultAzureCredentialBuilder().build())
-//        .buildClient()
-
-//    private var cosmosClientEndpoint = secretClient.getSecret("food-order-picker-db-url")
-//    private var cosmosClientKey = secretClient.getSecret("food-order-picker-db-key")
-
     private var cosmosClient = CosmosClientBuilder()
-        .endpoint(/*cosmosClientEndpoint.value*/ System.getenv("food-order-picker-db-url"))
-        .key(/*cosmosClientKey.value*/ System.getenv("food-order-picker-db-key"))
+        .endpoint(System.getenv("food-order-picker-db-url"))
+        .key(System.getenv("food-order-picker-db-key"))
         .buildClient()
 
-    private val databaseName = /*secretClient.getSecret("food-order-picker-db-databaseName").value*/ System.getenv("food-order-picker-db-databaseName")
-    private val containerName = /*secretClient.getSecret("food-order-picker-db-containerName").value*/ System.getenv("food-order-picker-db-containerName")
+    private val databaseName = System.getenv("food-order-picker-db-databaseName")
+    private val containerName = System.getenv("food-order-picker-db-containerName")
     private val partionKeyPath = "/id"
 
     private var database: CosmosDatabase? = null

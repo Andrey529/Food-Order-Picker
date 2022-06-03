@@ -67,12 +67,6 @@
 
     <dependencies>
 
-        <!-- Azure Key Vault-->
-        <dependency>
-            <groupId>com.azure</groupId>
-            <artifactId>azure-security-keyvault-secrets</artifactId>
-        </dependency>
-
         <!-- Azure CosmosDB-->
         <dependency>
             <groupId>com.azure</groupId>
@@ -124,11 +118,6 @@
             <groupId>org.jetbrains.kotlinx</groupId>
             <artifactId>kotlinx-serialization-json</artifactId>
             <version>${serialization.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>com.azure</groupId>
-            <artifactId>azure-identity</artifactId>
-            <version>1.3.0</version>
         </dependency>
     </dependencies>
 
