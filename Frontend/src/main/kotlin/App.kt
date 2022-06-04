@@ -1,10 +1,11 @@
 import com.benasher44.uuid.Uuid
 import csstype.*
 import kotlinx.browser.window
-import kotlinx.coroutines.MainScope
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.*
 import kotlinx.serialization.encodeToString
+import org.w3c.fetch.CORS
 import org.w3c.fetch.RequestInit
+import org.w3c.fetch.RequestMode
 import products.ProductType
 import products.ProductWithLink
 import products.burgers.Burger
@@ -26,31 +27,12 @@ import react.dom.html.ReactHTML.div
 import react.dom.html.ReactHTML.h1
 import react.dom.html.ReactHTML.h3
 import react.dom.html.ReactHTML.hr
-import react.dom.html.ReactHTML.img
 import react.dom.html.ReactHTML.li
 import react.dom.html.ReactHTML.ul
 import react.useEffectOnce
 import react.useState
 import kotlin.random.Random
 
-
-/*suspend fun fetchVideo(id: Int): KotlinVideo {
-    val response = window
-        .fetch("https://my-json-server.typicode.com/kotlin-hands-on/kotlinconf-json/videos/$id")
-        .await()
-        .text()
-        .await()
-    return Json.decodeFromString(response)
-}
-
-
-suspend fun fetchVideos(): List<KotlinVideo> = coroutineScope {
-    (1..5).map { id ->
-        async {
-            fetchVideo(id)
-        }
-    }.awaitAll()
-}*/
 
 
 // BigMack 140/199
@@ -151,7 +133,9 @@ val listProducts = listOf(
     )
 )
 
-fun test(order: List<ProductWithLink>) {
+var listOrderId = listOf<String>()
+
+suspend fun addOrder(order: List<ProductWithLink>) {
 
     val burgersOrder: MutableList<Burger> = mutableListOf()
     val drinksOrder: MutableList<Drink> = mutableListOf()
@@ -179,12 +163,35 @@ fun test(order: List<ProductWithLink>) {
 
     console.log(encodedStr)
 
-    window.fetch(
+    val response = window.fetch(
         "https://food-order-picker.azurewebsites.net/api/order",
         RequestInit(
-            method = "POST", body = encodedStr
+            method = "POST", body = encodedStr, mode = RequestMode.CORS
         )
-    )
+    ).await()
+        .text()
+        .await()
+    listOrderId = listOrderId + response
+}
+
+suspend fun deleteOrder(order: String) {
+
+    window.fetch(
+        "https://food-order-picker.azurewebsites.net/api/order?id=$order",
+        RequestInit(
+            method = "DELETE", mode = RequestMode.CORS
+        )
+    ).await()
+        .text()
+        .await()
+}
+
+suspend fun deleteAllOrders(orders: List<String>): List<Any> = coroutineScope {
+    (orders.indices).map { id ->
+        async {
+            deleteOrder(orders[id])
+        }
+    }.awaitAll()
 }
 
 val mainScope = MainScope()
@@ -192,6 +199,7 @@ val mainScope = MainScope()
 val App = FC<Props> {
     var currentOrderProduct: ProductWithLink? by useState(null)
     var currentAssortmentProduct: ProductWithLink? by useState(null)
+    var currentOrder: String? by useState(null)
 
     var assortmentProducts: List<ProductWithLink> by useState(emptyList())
     var orderProducts: List<ProductWithLink> by useState(emptyList())
@@ -318,186 +326,155 @@ val App = FC<Props> {
                 //textAlign = TextAlign.center
                 backgroundColor = NamedColor.aquamarine
                 float = Float.left
-                width = 20.pct
+                width = 25.pct
                 height = 800.px
             }
             h3 {
                 css {
                     textAlign = TextAlign.center
+                    marginTop = 20.px
                 }
-                +"Меню"
+                +"Заказы"
             }
-            a {
-                button {
-                    css {
-                        padding = 0.px
-                        border = 0.px
-                        marginLeft = 40.px
-                        width = 100.px
-                        height = 100.px
-                    }
-                    img {
-                        css {
-                            width = 100.px
-                            height = 100.px
-                            border = 0.px
-                            border = Border(4.px, LineStyle.solid, NamedColor.darkred)
-                            backgroundColor = NamedColor.gray
-                            //marginLeft = 40.px
-                        }
-                        src = "Images/burger.png"
-                        title = "Перейти в раздел Бургеров"
-                    }
-                }
-            }
-            a {
+            button {
                 css {
-                    marginLeft = 10.px
+                    //textAlign = TextAlign.center
+                    width = 100.px
+                    height = 50.px
+                    marginLeft = 70.px
+                    backgroundColor = NamedColor.maroon
                 }
-                button {
-                    css {
-                        padding = 0.px
-                        border = 0.px
-                        width = 100.px
-                        height = 100.px
-                    }
-                    img {
-                        css {
-                            width = 100.px
-                            height = 100.px
-                            border = 0.px
-                            border = Border(4.px, LineStyle.solid, NamedColor.darkred)
-                            backgroundColor = NamedColor.gray
-                        }
-                        src = "Images/coke.png"
-                        title = "Перейти в раздел Напитков"
-                    }
-                }
-            }
-            a {
-                css {
-                    marginLeft = 40.px
-                }
-                button {
-                    css {
-                        padding = 0.px
-                        border = 0.px
-                        width = 100.px
-                        height = 100.px
-                    }
+                onClick = {
 
-                    img {
-                        css {
-                            width = 100.px
-                            height = 100.px
-                            border = 0.px
-                            border = Border(4.px, LineStyle.solid, NamedColor.darkred)
-                            backgroundColor = NamedColor.gray
+                    listOrderId.forEach { curr ->
+                        mainScope.launch {
+                            deleteOrder(curr)
                         }
-                        src = "Images/french-fries.png"
-                        title = "Перейти в раздел Закусок"
+                    }
+                    listOrderId = emptyList()
+                }
+                +"Забрать все заказы"
+            }
+            button {
+                css {
+                    // textAlign = TextAlign.center
+                    width = 100.px
+                    height = 50.px
+                    backgroundColor = NamedColor.lime
+                }
+                onClick = {
+                    currentOrder?.let { curr ->
+                        mainScope.launch {
+                            deleteOrder(curr)
+                        }
+                        val order = curr in listOrderId
+                        if (order) {
+                            listOrderId = listOrderId - curr
+                        }
                     }
                 }
+                +"Забрать заказ"
             }
-            a {
+            div {
                 css {
-                    marginLeft = 10.px
                     marginTop = 10.px
+                    backgroundColor = NamedColor.steelblue
+                    border = Border(4.px, LineStyle.solid, NamedColor.darkred)
+                    overflow = Overflow.auto
+                    height = 500.px
+                    justifyContent = JustifyContent.center
+                    alignItems = AlignItems.center
+                    textAlign = TextAlign.center
+                    display = Display.flex
+                    flexDirection = FlexDirection.column
                 }
-                button {
-                    css {
-                        padding = 0.px
-                        border = 0.px
-                        width = 100.px
-                        height = 100.px
-                    }
-                    img {
-                        css {
-                            width = 100.px
-                            height = 100.px
-                            border = 0.px
-                            border = Border(4.px, LineStyle.solid, NamedColor.darkred)
-                            backgroundColor = NamedColor.gray
-                        }
-                        src = "Images/pie.png"
-                        title = "Перейти в раздел Десертов"
-                    }
-                }
-            }
-            a {
-                css {
 
-                }
-                button {
-                    css {
-                        width = 218.px
-                        height = 100.px
-                        marginLeft = 40.px
-                        textAlign = TextAlign.center
-                        border = Border(4.px, LineStyle.solid, NamedColor.darkred)
-                        backgroundColor = NamedColor.gray
+                OrderList {
+                    orders = listOrderId
+                    selectedOrder = currentOrder
+                    onSelectOrder = { order ->
+                        currentOrder = order
                     }
-                    +"Весь ассортимент"
                 }
+
             }
+        }
+        }
+
+    div {
+        id = "container"
+        css {
+            backgroundColor = NamedColor.lightgrey
+            float = Float.right
+            width = 25.pct
+            height = 800.px
         }
 
         div {
-            id = "container"
             css {
-                backgroundColor = NamedColor.lightgrey
-                float = Float.right
-                width = 25.pct
-                height = 800.px
+                overflow = Overflow.auto
             }
-
+            h3 {
+                css {
+                    textAlign = TextAlign.center
+                }
+                +"Ваш заказ"
+            }
+            button {
+                css {
+                    //textAlign = TextAlign.center
+                    width = 100.px
+                    height = 50.px
+                    marginLeft = 70.px
+                    backgroundColor = NamedColor.lightgoldenrodyellow
+                }
+                +"Убрать позицию из заказа"
+                onClick = {
+                    currentOrderProduct?.let { curr ->
+                        val product = curr in orderProducts
+                        if (product) {
+                            orderProducts = orderProducts - curr
+                        }
+                    }
+                }
+            }
+            button {
+                css {
+                    // textAlign = TextAlign.center
+                    width = 100.px
+                    height = 50.px
+                    backgroundColor = NamedColor.green
+                }
+                onClick = {
+                    val testOrder = mutableListOf<ProductWithLink>()
+                    for (i in orderProducts.indices) {
+                        testOrder += ProductWithLink(
+                            orderProducts[i].id,
+                            orderProducts[i].product,
+                            orderProducts[i].type,
+                            orderProducts[i].image,
+                            orderProducts[i].uniqueUrl
+                        )
+                    }
+                    mainScope.launch {
+                        addOrder(testOrder)
+                    }
+                    orderProducts = emptyList()
+                }
+                +"Сделать заказ и подождать"
+            }
             div {
-                h3 {
-                    css {
-                        textAlign = TextAlign.center
-                    }
-                    +"Ваш заказ"
-                }
-                button {
-                    css {
-                        //textAlign = TextAlign.center
-                        width = 100.px
-                        height = 50.px
-                        marginLeft = 70.px
-                        backgroundColor = NamedColor.lightgoldenrodyellow
-                    }
-                    +"Убрать позицию из заказа"
-                    onClick = {
-                        currentOrderProduct?.let { curr ->
-                            val product = curr in orderProducts
-                            if (product) {
-                                orderProducts = orderProducts - curr
-                            }
-                        }
-                    }
-                }
-                button {
-                    css {
-                        // textAlign = TextAlign.center
-                        width = 100.px
-                        height = 50.px
-                        backgroundColor = NamedColor.green
-                    }
-                    onClick = {
-                        val testOrder = mutableListOf<ProductWithLink>()
-                        for (i in orderProducts.indices) {
-                            testOrder += ProductWithLink(
-                                orderProducts[i].id,
-                                orderProducts[i].product,
-                                orderProducts[i].type,
-                                orderProducts[i].image,
-                                orderProducts[i].uniqueUrl
-                            )
-                        }
-                        test(testOrder)
-                        orderProducts = emptyList()
-                    }
-                    +"Сделать заказ и подождать"
+                css {
+                    marginTop = 10.px
+                    backgroundColor = NamedColor.steelblue
+                    border = Border(4.px, LineStyle.solid, NamedColor.darkred)
+                    overflow = Overflow.auto
+                    height = 500.px
+                    justifyContent = JustifyContent.center
+                    alignItems = AlignItems.center
+                    textAlign = TextAlign.center
+                    display = Display.flex
+                    flexDirection = FlexDirection.column
                 }
                 ProductList {
                     products = orderProducts
@@ -507,195 +484,195 @@ val App = FC<Props> {
                     }
                 }
             }
+        }
 
+    }
+    div {
+        id = "list"
+        css {
+            backgroundColor = NamedColor.blueviolet
+            float = Float.left
+            width = 50.pct
+            height = 800.px
         }
         div {
-            id = "list"
-            css {
-                backgroundColor = NamedColor.blueviolet
-                float = Float.left
-                width = 55.pct
-                height = 800.px
+            h3 {
+                +"Ассортимент"
             }
-            div {
-                h3 {
-                    +"Ассортимент"
+            ProductList {
+                products = assortmentProducts
+                selectedProduct = currentAssortmentProduct
+                onSelectProduct = { product ->
+                    currentAssortmentProduct = product
                 }
-                ProductList {
-                    products = assortmentProducts
-                    selectedProduct = currentAssortmentProduct
-                    onSelectProduct = { product ->
-                        currentAssortmentProduct = product
-                    }
-                }
-                // BigMack 140/199
-                // Cheese 53/125
-                // BigTasty 249/325
-                // Hum 51/130
+            }
+            // BigMack 140/199
+            // Cheese 53/125
+            // BigTasty 249/325
+            // Hum 51/130
 
-                // Water 50/70/100
-                // Cola 69/79/129
-                // Pepsi(Cherry?) 69/79/129
-                // Fanta 69/79/129
+            // Water 50/70/100
+            // Cola 69/79/129
+            // Pepsi(Cherry?) 69/79/129
+            // Fanta 69/79/129
 
-                // Pie 170/170
-                // Pancacke 130/130
-                // Donut 89/89
-                currentAssortmentProduct?.let { curr ->
-                    ProductPlayer {
-                        var copy = listProducts[0]
-                        var copyBurger = Burger(1, BurgerType.NONE, BurgerSize.SINGLE)
-                        var copyDrink = Drink(1, DrinkType.NONE, Volume.TWO_THIRDS_OF_LITER)
-                        var copyDessert = Dessert(1, DessertType.NONE, Filling.VANILLA_CREAM)
+            // Pie 170/170
+            // Pancacke 130/130
+            // Donut 89/89
+            currentAssortmentProduct?.let { curr ->
+                ProductPlayer {
+                    var copy = listProducts[0]
+                    var copyBurger = Burger(1, BurgerType.NONE, BurgerSize.SINGLE)
+                    var copyDrink = Drink(1, DrinkType.NONE, Volume.TWO_THIRDS_OF_LITER)
+                    var copyDessert = Dessert(1, DessertType.NONE, Filling.VANILLA_CREAM)
 
-                        product = curr
-                        assortmentProduct = curr in assortmentProducts
-                        onOrderButtonPressed = {
-                            if (product in assortmentProducts) {
-                                when (product.id) {
-                                    1 -> {
-                                        copyBurger = if (sizeBurger == BurgerSize.SINGLE) {
-                                            Burger(140, BurgerType.BIGMAC, BurgerSize.SINGLE)
-                                        } else {
-                                            Burger(199, BurgerType.BIGMAC, BurgerSize.DOUBLE)
-                                        }
-                                    }
-                                    2 -> {
-                                        copyBurger = if (sizeBurger == BurgerSize.SINGLE) {
-                                            Burger(53, BurgerType.CHEESEBURGER, BurgerSize.SINGLE)
-                                        } else {
-                                            Burger(125, BurgerType.CHEESEBURGER, BurgerSize.DOUBLE)
-                                        }
-                                    }
-                                    3 -> {
-                                        copyBurger = if (sizeBurger == BurgerSize.SINGLE) {
-                                            Burger(249, BurgerType.BIGTASTY, BurgerSize.SINGLE)
-                                        } else {
-                                            Burger(325, BurgerType.BIGTASTY, BurgerSize.DOUBLE)
-                                        }
-                                    }
-                                    4 -> {
-                                        copyBurger = if (sizeBurger == BurgerSize.SINGLE) {
-                                            Burger(51, BurgerType.HAMBURGER, BurgerSize.SINGLE)
-                                        } else {
-                                            Burger(130, BurgerType.HAMBURGER, BurgerSize.DOUBLE)
-                                        }
-                                    }
-                                    5 -> {
-                                        copyDrink = if (sizeDrink == Volume.THIRD_OF_LITER) {
-                                            Drink(50, DrinkType.WATER, Volume.THIRD_OF_LITER)
-                                        } else if (sizeDrink == Volume.TWO_THIRDS_OF_LITER) {
-                                            Drink(70, DrinkType.WATER, Volume.TWO_THIRDS_OF_LITER)
-                                        } else {
-                                            Drink(100, DrinkType.WATER, Volume.LITER)
-                                        }
-                                    }
-                                    6 -> {
-                                        copyDrink = if (sizeDrink == Volume.THIRD_OF_LITER) {
-                                            Drink(69, DrinkType.COLA, Volume.THIRD_OF_LITER)
-                                        } else if (sizeDrink == Volume.TWO_THIRDS_OF_LITER) {
-                                            Drink(79, DrinkType.COLA, Volume.TWO_THIRDS_OF_LITER)
-                                        } else {
-                                            Drink(129, DrinkType.COLA, Volume.LITER)
-                                        }
-                                    }
-                                    7 -> {
-                                        copyDrink = if (sizeDrink == Volume.THIRD_OF_LITER) {
-                                            Drink(69, DrinkType.CHERRY, Volume.THIRD_OF_LITER)
-                                        } else if (sizeDrink == Volume.TWO_THIRDS_OF_LITER) {
-                                            Drink(79, DrinkType.CHERRY, Volume.TWO_THIRDS_OF_LITER)
-                                        } else {
-                                            Drink(129, DrinkType.CHERRY, Volume.LITER)
-                                        }
-                                    }
-                                    8 -> {
-                                        copyDrink = if (sizeDrink == Volume.THIRD_OF_LITER) {
-                                            Drink(69, DrinkType.FANTA, Volume.THIRD_OF_LITER)
-                                        } else if (sizeDrink == Volume.TWO_THIRDS_OF_LITER) {
-                                            Drink(79, DrinkType.FANTA, Volume.TWO_THIRDS_OF_LITER)
-                                        } else {
-                                            Drink(129, DrinkType.FANTA, Volume.LITER)
-                                        }
-                                    }
-                                    9 -> {
-                                        copyDessert = if (fillDessert == Filling.VANILLA_CREAM) {
-                                            Dessert(170, DessertType.PIE, Filling.VANILLA_CREAM)
-                                        } else {
-                                            Dessert(170, DessertType.PIE, Filling.CHOCOLATE_CREAM)
-                                        }
-                                    }
-                                    10 -> {
-                                        copyDessert = if (fillDessert == Filling.VANILLA_CREAM) {
-                                            Dessert(130, DessertType.PANCAKE, Filling.VANILLA_CREAM)
-                                        } else {
-                                            Dessert(130, DessertType.PANCAKE, Filling.CHOCOLATE_CREAM)
-                                        }
-                                    }
-                                    11 -> {
-                                        copyDessert = if (fillDessert == Filling.VANILLA_CREAM) {
-                                            Dessert(89, DessertType.DONUT, Filling.VANILLA_CREAM)
-                                        } else {
-                                            Dessert(89, DessertType.DONUT, Filling.CHOCOLATE_CREAM)
-                                        }
+                    product = curr
+                    assortmentProduct = curr in assortmentProducts
+                    onOrderButtonPressed = {
+                        if (product in assortmentProducts) {
+                            when (product.id) {
+                                1 -> {
+                                    copyBurger = if (sizeBurger == BurgerSize.SINGLE) {
+                                        Burger(140, BurgerType.BIGMAC, BurgerSize.SINGLE)
+                                    } else {
+                                        Burger(199, BurgerType.BIGMAC, BurgerSize.DOUBLE)
                                     }
                                 }
-                                if ((product.id >= 1) && (product.id <= 4)) {
-                                    copy = ProductWithLink(
-                                        product.id,
-                                        copyBurger,
-                                        product.type,
-                                        product.image,
-                                        Uuid(Random.nextLong(), Random.nextLong())
-                                    )
+                                2 -> {
+                                    copyBurger = if (sizeBurger == BurgerSize.SINGLE) {
+                                        Burger(53, BurgerType.CHEESEBURGER, BurgerSize.SINGLE)
+                                    } else {
+                                        Burger(125, BurgerType.CHEESEBURGER, BurgerSize.DOUBLE)
+                                    }
                                 }
-                                if ((product.id >= 5) && (product.id <= 8)) {
-                                    copy = ProductWithLink(
-                                        product.id,
-                                        copyDrink,
-                                        product.type,
-                                        product.image,
-                                        Uuid(Random.nextLong(), Random.nextLong())
-                                    )
+                                3 -> {
+                                    copyBurger = if (sizeBurger == BurgerSize.SINGLE) {
+                                        Burger(249, BurgerType.BIGTASTY, BurgerSize.SINGLE)
+                                    } else {
+                                        Burger(325, BurgerType.BIGTASTY, BurgerSize.DOUBLE)
+                                    }
                                 }
-                                if ((product.id >= 9) && (product.id <= 11)) {
-                                    copy = ProductWithLink(
-                                        product.id,
-                                        copyDessert,
-                                        product.type,
-                                        product.image,
-                                        Uuid(Random.nextLong(), Random.nextLong())
-                                    )
+                                4 -> {
+                                    copyBurger = if (sizeBurger == BurgerSize.SINGLE) {
+                                        Burger(51, BurgerType.HAMBURGER, BurgerSize.SINGLE)
+                                    } else {
+                                        Burger(130, BurgerType.HAMBURGER, BurgerSize.DOUBLE)
+                                    }
                                 }
-
-                                // сделать реализацию строго под каждую позицию, так как имеем в ассортименте id первым параметром
-                                orderProducts = orderProducts + copy
-                            } else {
-                                orderProducts = orderProducts - product
+                                5 -> {
+                                    copyDrink = if (sizeDrink == Volume.THIRD_OF_LITER) {
+                                        Drink(50, DrinkType.WATER, Volume.THIRD_OF_LITER)
+                                    } else if (sizeDrink == Volume.TWO_THIRDS_OF_LITER) {
+                                        Drink(70, DrinkType.WATER, Volume.TWO_THIRDS_OF_LITER)
+                                    } else {
+                                        Drink(100, DrinkType.WATER, Volume.LITER)
+                                    }
+                                }
+                                6 -> {
+                                    copyDrink = if (sizeDrink == Volume.THIRD_OF_LITER) {
+                                        Drink(69, DrinkType.COLA, Volume.THIRD_OF_LITER)
+                                    } else if (sizeDrink == Volume.TWO_THIRDS_OF_LITER) {
+                                        Drink(79, DrinkType.COLA, Volume.TWO_THIRDS_OF_LITER)
+                                    } else {
+                                        Drink(129, DrinkType.COLA, Volume.LITER)
+                                    }
+                                }
+                                7 -> {
+                                    copyDrink = if (sizeDrink == Volume.THIRD_OF_LITER) {
+                                        Drink(69, DrinkType.CHERRY, Volume.THIRD_OF_LITER)
+                                    } else if (sizeDrink == Volume.TWO_THIRDS_OF_LITER) {
+                                        Drink(79, DrinkType.CHERRY, Volume.TWO_THIRDS_OF_LITER)
+                                    } else {
+                                        Drink(129, DrinkType.CHERRY, Volume.LITER)
+                                    }
+                                }
+                                8 -> {
+                                    copyDrink = if (sizeDrink == Volume.THIRD_OF_LITER) {
+                                        Drink(69, DrinkType.FANTA, Volume.THIRD_OF_LITER)
+                                    } else if (sizeDrink == Volume.TWO_THIRDS_OF_LITER) {
+                                        Drink(79, DrinkType.FANTA, Volume.TWO_THIRDS_OF_LITER)
+                                    } else {
+                                        Drink(129, DrinkType.FANTA, Volume.LITER)
+                                    }
+                                }
+                                9 -> {
+                                    copyDessert = if (fillDessert == Filling.VANILLA_CREAM) {
+                                        Dessert(170, DessertType.PIE, Filling.VANILLA_CREAM)
+                                    } else {
+                                        Dessert(170, DessertType.PIE, Filling.CHOCOLATE_CREAM)
+                                    }
+                                }
+                                10 -> {
+                                    copyDessert = if (fillDessert == Filling.VANILLA_CREAM) {
+                                        Dessert(130, DessertType.PANCAKE, Filling.VANILLA_CREAM)
+                                    } else {
+                                        Dessert(130, DessertType.PANCAKE, Filling.CHOCOLATE_CREAM)
+                                    }
+                                }
+                                11 -> {
+                                    copyDessert = if (fillDessert == Filling.VANILLA_CREAM) {
+                                        Dessert(89, DessertType.DONUT, Filling.VANILLA_CREAM)
+                                    } else {
+                                        Dessert(89, DessertType.DONUT, Filling.CHOCOLATE_CREAM)
+                                    }
+                                }
                             }
+                            if ((product.id >= 1) && (product.id <= 4)) {
+                                copy = ProductWithLink(
+                                    product.id,
+                                    copyBurger,
+                                    product.type,
+                                    product.image,
+                                    Uuid(Random.nextLong(), Random.nextLong())
+                                )
+                            }
+                            if ((product.id >= 5) && (product.id <= 8)) {
+                                copy = ProductWithLink(
+                                    product.id,
+                                    copyDrink,
+                                    product.type,
+                                    product.image,
+                                    Uuid(Random.nextLong(), Random.nextLong())
+                                )
+                            }
+                            if ((product.id >= 9) && (product.id <= 11)) {
+                                copy = ProductWithLink(
+                                    product.id,
+                                    copyDessert,
+                                    product.type,
+                                    product.image,
+                                    Uuid(Random.nextLong(), Random.nextLong())
+                                )
+                            }
+
+                            // сделать реализацию строго под каждую позицию, так как имеем в ассортименте id первым параметром
+                            orderProducts = orderProducts + copy
+                        } else {
+                            orderProducts = orderProducts - product
                         }
                     }
                 }
+            }
 
 
-            }
         }
-        div {
-            id = "clear"
-            css {
-                clear = Clear.both
-            }
+    }
+    div {
+        id = "clear"
+        css {
+            clear = Clear.both
         }
-        div {
-            id = "footer"
-            css {
-                backgroundColor = NamedColor.black
-                height = 150.px
-                color = NamedColor.white
-                textAlign = TextAlign.center
-            }
-            h3 {
-                +"Подвал"
-            }
+    }
+    div {
+        id = "footer"
+        css {
+            backgroundColor = NamedColor.black
+            height = 150.px
+            color = NamedColor.white
+            textAlign = TextAlign.center
+        }
+        h3 {
+            +"Подвал"
         }
     }
 }
