@@ -4,9 +4,9 @@ import com.azure.cosmos.CosmosClientBuilder
 import com.azure.cosmos.CosmosContainer
 import com.azure.cosmos.CosmosDatabase
 import com.azure.cosmos.models.*
-import com.azure.cosmos.util.CosmosPagedIterable
 import com.microsoft.azure.functions.*
 import com.microsoft.azure.functions.annotation.AuthorizationLevel
+import com.microsoft.azure.functions.annotation.CosmosDBInput
 import com.microsoft.azure.functions.annotation.FunctionName
 import com.microsoft.azure.functions.annotation.HttpTrigger
 import kotlinx.serialization.decodeFromString
@@ -23,6 +23,8 @@ class OrderControllers {
         .endpoint(System.getenv("food-order-picker-db-url"))
         .key(System.getenv("food-order-picker-db-key"))
         .buildClient()
+
+    private val connectionString = System.getenv("dbConnectionString")
 
     private val databaseName = System.getenv("food-order-picker-db-databaseName")
     private val containerName = System.getenv("food-order-picker-db-containerName")
@@ -150,50 +152,64 @@ class OrderControllers {
             authLevel = AuthorizationLevel.ANONYMOUS,
             route = "orders"
         ) request: HttpRequestMessage<Optional<String?>>,
+        @CosmosDBInput(name = "food-order-picker-db",
+            databaseName = "Products",
+            collectionName = "Orders",
+            sqlQuery = "SELECT * FROM c",
+            connectionStringSetting = "dbConnectionString")
+        items: List<Order>,
         context: ExecutionContext,
     ): HttpResponseMessage {
         context.logger.info("GetOrders HTTP trigger function invoked with get method.")
 
-        try {
-            createDatabaseIfNotExists(context.logger)
-            createContainerIfNotExists(context.logger)
+        val encodedItems = json.encodeToString(items)
+        context.logger.info(encodedItems)
 
-            if (container != null) {
-                val items: CosmosPagedIterable<Order> = container!!.readAllItems(PartitionKey.NONE, Order::class.java)
-                context.logger.info("Items successfully read")
+        return request
+            .createResponseBuilder(HttpStatus.OK)
+            .body(encodedItems)
+            .build()
 
-                val listItems = mutableListOf<Order>()
-                items.forEach {
-                    listItems.add(it)
-                }
-
-                cosmosClient.close()
-                context.logger.info("Close connection with CosmosDB.")
-
-                return request
-                    .createResponseBuilder(HttpStatus.OK)
-                    .body(json.encodeToString(listItems))
-                    .build()
-            } else {
-                cosmosClient.close()
-                context.logger.info("Close connection with CosmosDB.")
-
-                context.logger.info("Read orders failed, because container with orders does not exist.")
-                return request
-                    .createResponseBuilder(HttpStatus.BAD_REQUEST)
-                    .body("Container with order data does not exist.")
-                    .build()
-            }
-        } catch (e: Exception) {
-            cosmosClient.close()
-            context.logger.info("Close connection with CosmosDB.")
-
-            context.logger.info("Read orders failed with $e.")
-            return request
-                .createResponseBuilder(HttpStatus.BAD_REQUEST)
-                .body("Read orders failed.")
-                .build()
-        }
+//        try {
+//            createDatabaseIfNotExists(context.logger)
+//            createContainerIfNotExists(context.logger)
+//
+//            if (container != null) {
+//                val items: CosmosPagedIterable<Order> = container!!.readAllItems(PartitionKey.NONE, Order::class.java)
+//                context.logger.info("Items successfully read")
+//
+//                val listItems = mutableListOf<Order>()
+//                items.forEach {
+//                    listItems.add(it)
+//                }
+//
+//                cosmosClient.close()
+//                context.logger.info("Close connection with CosmosDB.")
+//
+//                return request
+//                    .createResponseBuilder(HttpStatus.OK)
+//                    .body(json.encodeToString(listItems))
+//                    .build()
+//            } else {
+//                cosmosClient.close()
+//                context.logger.info("Close connection with CosmosDB.")
+//
+//                context.logger.info("Read orders failed, because container with orders does not exist.")
+//                return request
+//                    .createResponseBuilder(HttpStatus.BAD_REQUEST)
+//                    .body("Container with order data does not exist.")
+//                    .build()
+//            }
+//        } catch (e: Exception) {
+//            cosmosClient.close()
+//            context.logger.info("Close connection with CosmosDB.")
+//
+//            context.logger.info("Read orders failed with $e.")
+//            return request
+//                .createResponseBuilder(HttpStatus.BAD_REQUEST)
+//                .body("Read orders failed.")
+//                .build()
+//        }
     }
 
     // DELETE: api/order?id=<orderId>
