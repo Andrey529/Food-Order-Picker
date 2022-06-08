@@ -159,7 +159,7 @@ class OrderControllers {
             createContainerIfNotExists(context.logger)
 
             if (container != null) {
-                val items: CosmosPagedIterable<Order> = container!!.readAllItems(PartitionKey(""), Order::class.java)
+                val items: CosmosPagedIterable<Order> = container!!.readAllItems(PartitionKey.NONE, Order::class.java)
                 context.logger.info("Items successfully read")
 
                 val listItems = mutableListOf<Order>()
